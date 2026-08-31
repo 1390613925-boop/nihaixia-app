@@ -40,5 +40,28 @@ void main() {
       final k = await getSolarTermKnowledge('不存在的节气');
       expect(k, isNull);
     });
+
+    test('立春知识含三候/起居/食疗', () async {
+      final k = await getSolarTermKnowledge('立春');
+      expect(k, isNotNull);
+      expect(k!.phenology, hasLength(3));
+      expect(k.phenology.first, isNotEmpty);
+      expect(k.dailyRegimen, contains('【推断】'));
+      expect(k.dietRecipe, isNotEmpty);
+    });
+
+    test('24 节气天文静态表正确', () {
+      expect(getTermApproxDate('立春'), '2月3-5日');
+      expect(getTermSolarLongitude('立春'), 315);
+      expect(getTermApproxDate('春分'), '3月20-22日');
+      expect(getTermSolarLongitude('春分'), 0);
+      expect(getTermApproxDate('冬至'), '12月21-23日');
+      expect(getTermSolarLongitude('冬至'), 270);
+    });
+
+    test('未知节气天文查询返回兜底', () {
+      expect(getTermApproxDate('不存在'), isEmpty);
+      expect(getTermSolarLongitude('不存在'), 0);
+    });
   });
 }
