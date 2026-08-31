@@ -59,6 +59,15 @@ class SolarTermCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
+                    if (info.currentTerm.isNotEmpty &&
+                        getTermApproxDate(info.currentTerm).isNotEmpty)
+                      Text(
+                        '约 ${getTermApproxDate(info.currentTerm)} · 太阳黄经 ${getTermSolarLongitude(info.currentTerm)}°',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
                     Text(
                       '24 节气健康知识 · 倪师节气养生解析',
                       style: TextStyle(

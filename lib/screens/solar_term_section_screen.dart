@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nihaisha_app/services/solar_term_service.dart';
+import 'package:nihaisha_app/widgets/solar_term_widgets.dart';
 
 /// 节气养生独立板块。
 ///
-/// 顶部展示当前节气卡（节气名 + 距下一节气倒计时 + 养生要点 + 倪师解析），
-/// 下方为 24 节气竖向列表，每项卡片显示节气名、健康知识、倪师解析（可展开）。
+/// 顶部展示当前节气卡（节气名 + 距下一节气倒计时 + 公历约期 + 太阳黄经 +
+/// 三候 + 养生要点 + 倪师解析），下方为 24 节气竖向列表，每项卡片常驻显示
+/// 节气名、三候、健康知识，展开后显示倪师解析、起居调摄、食疗建议。
 /// 全部使用 Theme 语义 token，不硬编码颜色。
 ///
 /// 内容来源：[assets/data/solar_term_knowledge.json]，倪师相关解析凡非逐字
@@ -87,6 +89,7 @@ class _SolarTermSectionScreenState extends State<SolarTermSectionScreen> {
 
   Widget _currentCard(ColorScheme cs, SolarTermInfo info) {
     final knowledge = _all.where((k) => k.term == info.currentTerm).firstOrNull;
+    final healthText = knowledge?.health ?? info.healthTip;
     return Card(
       elevation: 2,
       child: Container(
@@ -120,47 +123,33 @@ class _SolarTermSectionScreenState extends State<SolarTermSectionScreen> {
                   ),
               ],
             ),
+            const SizedBox(height: 6),
+            if (info.approxDate.isNotEmpty)
+              Row(
+                children: [
+                  Icon(Icons.calendar_today_outlined,
+                      size: 14, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text('约 ${info.approxDate}',
+                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                  if (info.solarLongitude > 0) ...[
+                    const SizedBox(width: 12),
+                    Icon(Icons.wb_sunny_outlined,
+                        size: 14, color: cs.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text('太阳黄经 ${info.solarLongitude}°',
+                        style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                  ],
+                ],
+              ),
             const SizedBox(height: 8),
-            Text(info.healthTip, style: const TextStyle(fontSize: 13)),
+            if (knowledge != null && knowledge.phenology.isNotEmpty)
+              phenologyChips(cs, knowledge.phenology),
+            const SizedBox(height: 8),
+            Text(healthText, style: const TextStyle(fontSize: 13, height: 1.6)),
             if (knowledge != null) ...[
               const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: cs.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.menu_book_outlined,
-                            size: 16, color: cs.onTertiaryContainer),
-                        const SizedBox(width: 6),
-                        Text(
-                          '倪师解析',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: cs.onTertiaryContainer,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      knowledge.niShi,
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.6,
-                        color: cs.onTertiaryContainer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              solarTermBlock(cs, Icons.menu_book_outlined, '倪师解析', knowledge.niShi),
             ],
           ],
         ),
@@ -184,7 +173,7 @@ class _SolarTermSectionScreenState extends State<SolarTermSectionScreen> {
   }
 }
 
-/// 单个节气卡片：节气名 + 健康知识常驻，倪师解析可展开。
+/// 单个节气卡片：节气名 + 三候 + 健康知识常驻，展开后显示倪师解析、起居调摄、食疗建议。
 class _TermCard extends StatefulWidget {
   final SolarTermKnowledge k;
   const _TermCard({required this.k});
@@ -199,6 +188,7 @@ class _TermCardState extends State<_TermCard> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final k = widget.k;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -214,7 +204,7 @@ class _TermCardState extends State<_TermCard> {
                     children: [
                       Expanded(
                         child: Text(
-                          widget.k.term,
+                          k.term,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -222,17 +212,27 @@ class _TermCardState extends State<_TermCard> {
                           ),
                         ),
                       ),
+                      if (k.phenology.isNotEmpty)
+                        Expanded(
+                          child: Text(
+                            k.phenology.join(' · '),
+                            textAlign: TextAlign.end,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: 6),
                       Icon(
-                        _expanded
-                            ? Icons.expand_less
-                            : Icons.expand_more,
+                        _expanded ? Icons.expand_less : Icons.expand_more,
                         color: cs.onSurfaceVariant,
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    widget.k.health,
+                    k.health,
                     style: const TextStyle(fontSize: 13, height: 1.6),
                   ),
                   const SizedBox(height: 6),
@@ -242,7 +242,7 @@ class _TermCardState extends State<_TermCard> {
                           size: 14, color: cs.onSurfaceVariant),
                       const SizedBox(width: 4),
                       Text(
-                        _expanded ? '收起倪师解析' : '查看倪师解析',
+                        _expanded ? '收起详情' : '查看倪师解析·起居·食疗',
                         style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                       ),
                     ],
@@ -255,21 +255,27 @@ class _TermCardState extends State<_TermCard> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: cs.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  widget.k.niShi,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.6,
-                    color: cs.onTertiaryContainer,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  solarTermBlock(
+                    cs,
+                    Icons.self_improvement_outlined,
+                    '起居调摄',
+                    k.dailyRegimen.isNotEmpty
+                        ? k.dailyRegimen
+                        : '顺时起居，寒温适度，起居有常。',
                   ),
-                ),
+                  solarTermBlock(
+                    cs,
+                    Icons.local_dining_outlined,
+                    '食疗建议',
+                    k.dietRecipe.isNotEmpty
+                        ? k.dietRecipe
+                        : '饮食有节，因时制宜，少辛增润。',
+                  ),
+                  solarTermBlock(cs, Icons.menu_book_outlined, '倪师解析', k.niShi),
+                ],
               ),
             ),
         ],
