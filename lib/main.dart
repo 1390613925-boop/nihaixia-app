@@ -45,7 +45,7 @@ class _NiHaishaAppState extends State<NiHaishaApp> {
         return MaterialApp(
           title: '岐黄经方',
           debugShowCheckedModeBanner: false,
-          themeMode: ThemeMode.system,
+          themeMode: settings.themeMode,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF0B6B53),

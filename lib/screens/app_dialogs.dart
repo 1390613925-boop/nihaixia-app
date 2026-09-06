@@ -32,12 +32,24 @@ void showSettingsDialog(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === 阅读设置（品牌配色固定，深浅色跟随系统） ===
+              // === 阅读设置（含深浅色手动切换） ===
               const Text(
                 '阅读',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 8),
+              const Text('暗黑模式', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              SegmentedButton<ThemeMode>(
+                segments: const [
+                  ButtonSegment(value: ThemeMode.system, label: Text('跟随系统')),
+                  ButtonSegment(value: ThemeMode.light, label: Text('浅色')),
+                  ButtonSegment(value: ThemeMode.dark, label: Text('深色')),
+                ],
+                selected: {settings.themeMode},
+                onSelectionChanged: (s) => settings.setThemeMode(s.first),
+              ),
+              const SizedBox(height: 16),
               const Text('字体大小', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Row(

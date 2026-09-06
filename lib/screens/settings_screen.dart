@@ -38,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _sectionTitle('阅读'),
+            _themeModeTile(),
             _fontScaleTile(),
             const Divider(height: 24),
             _sectionTitle('诊断'),
@@ -79,6 +80,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       t,
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     ),
+  );
+
+  Widget _themeModeTile() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text('暗黑模式', style: TextStyle(fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      SegmentedButton<ThemeMode>(
+        segments: const [
+          ButtonSegment(value: ThemeMode.system, label: Text('跟随系统')),
+          ButtonSegment(value: ThemeMode.light, label: Text('浅色')),
+          ButtonSegment(value: ThemeMode.dark, label: Text('深色')),
+        ],
+        selected: {_settings.themeMode},
+        onSelectionChanged: (s) => _settings.setThemeMode(s.first),
+      ),
+    ],
   );
 
   Widget _fontScaleTile() => Column(
