@@ -10,6 +10,19 @@ void main() {
   });
 
   group('FormulaRepository 加载', () {
+    test('方剂组成保留功用与临床常用量字段', () {
+      final formula = FormulaRepository.getById(
+        'guizhi_qu_shaoyao_jia_shuqi_longgu_muli_tang',
+      );
+      expect(formula, isNotNull);
+      final guizhi = formula!.components.firstWhere((c) => c.name == '桂枝');
+      expect(guizhi.role, '温通心阳');
+      expect(guizhi.clinical, '3钱');
+      final muli = formula.components.firstWhere((c) => c.name == '牡蛎');
+      expect(muli.role, '敛阴潜阳');
+      expect(muli.clinical, '5钱');
+    });
+
     test('load后getAll应返回非空列表', () {
       final formulas = FormulaRepository.getAll();
       expect(formulas, isNotEmpty);

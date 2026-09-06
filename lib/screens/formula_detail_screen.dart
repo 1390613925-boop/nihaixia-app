@@ -37,26 +37,27 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
       final bookmarks = await db.getAllBookmarks();
       final match = bookmarks.firstWhere(
         (b) => b.title == widget.formula.name,
-        orElse: () => Bookmark(title: '', content: '', category: '', source: ''),
+        orElse: () =>
+            Bookmark(title: '', content: '', category: '', source: ''),
       );
       if (match.id != null) {
         await db.deleteBookmark(match.id!);
       }
     } else {
-      await db.insertBookmark(Bookmark(
-        title: widget.formula.name,
-        content: _buildBookmarkContent(),
-        category: '方剂',
-        source: 'formula_detail',
-      ));
+      await db.insertBookmark(
+        Bookmark(
+          title: widget.formula.name,
+          content: _buildBookmarkContent(),
+          category: '方剂',
+          source: 'formula_detail',
+        ),
+      );
     }
     if (mounted) setState(() => _isBookmarked = !_isBookmarked);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isBookmarked ? '已收藏' : '已取消收藏'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_isBookmarked ? '已收藏' : '已取消收藏')));
     }
   }
 
@@ -78,9 +79,7 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
         title: Text(f.name),
         actions: [
           IconButton(
-            icon: Icon(
-              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-            ),
+            icon: Icon(_isBookmarked ? Icons.bookmark : Icons.bookmark_border),
             onPressed: _toggleBookmark,
           ),
         ],
@@ -142,11 +141,11 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
                 child: InkWell(
                   onTap: herb != null
                       ? () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => HerbDetailScreen(herb: herb),
-                            ),
-                          )
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HerbDetailScreen(herb: herb),
+                          ),
+                        )
                       : null,
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
@@ -176,8 +175,12 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
                                   text: c.name,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: herb != null ? cs.primary : cs.onSurface,
-                                    decoration: herb != null ? TextDecoration.underline : null,
+                                    color: herb != null
+                                        ? cs.primary
+                                        : cs.onSurface,
+                                    decoration: herb != null
+                                        ? TextDecoration.underline
+                                        : null,
                                   ),
                                 ),
                                 if (c.dosage.isNotEmpty)
@@ -186,14 +189,31 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
                             ),
                           ),
                         ),
-                        if (c.role.isNotEmpty)
+                        if (c.role.isNotEmpty || c.clinical.isNotEmpty)
                           Expanded(
-                            child: Text(
-                              c.role,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: context.colors.onSurfaceVariant,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if (c.role.isNotEmpty)
+                                  Text(
+                                    c.role,
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: context.colors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                if (c.clinical.isNotEmpty)
+                                  Text(
+                                    '常用量 ${c.clinical}',
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: context.colors.onSurfaceVariant
+                                          .withValues(alpha: 0.78),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                       ],
@@ -240,10 +260,7 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
             if (f.dosage.isNotEmpty) ...[
               _SectionTitle(title: '煎服法'),
               const SizedBox(height: 8),
-              Text(
-                f.dosage,
-                style: const TextStyle(fontSize: 14, height: 1.6),
-              ),
+              Text(f.dosage, style: const TextStyle(fontSize: 14, height: 1.6)),
               const SizedBox(height: 20),
             ],
 

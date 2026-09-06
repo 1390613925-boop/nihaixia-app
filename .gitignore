@@ -57,6 +57,12 @@ _writetest.txt
 *.new
 android/build/
 
+# Release signing material must stay local
+/android/key.properties
+*.jks
+*.keystore
+*.p12
+
 # CloudStudio deploy output (index.html + apk) and build log
 deploy_v*/
 build_apk*.log

@@ -2984,16 +2984,19 @@
         {
           "name": "桂枝",
           "dosage": "三两",
+          "role": "温通心阳",
           "clinical": "3钱"
         },
         {
           "name": "生姜",
           "dosage": "三两",
+          "role": "和胃散寒",
           "clinical": "3钱"
         },
         {
           "name": "大枣",
-          "dosage": "十二枚"
+          "dosage": "十二枚",
+          "role": "益气和营"
         },
         {
           "name": "蜀漆",
@@ -3016,6 +3019,7 @@
         {
           "name": "炙甘草",
           "dosage": "二两",
+          "role": "益气和中",
           "clinical": "2钱"
         }
       ],

@@ -42,27 +42,25 @@ class Formula {
       dosage: json['dosage'] as String? ?? '',
       preparation: json['preparation'] as String? ?? '',
       explanation: json['explanation'] as String? ?? '',
-      keywords: (json['keywords'] as List?)
-              ?.map((k) => k as String)
-              .toList() ??
-          [],
+      keywords:
+          (json['keywords'] as List?)?.map((k) => k as String).toList() ?? [],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'alias': alias,
-        'meridian': meridian,
-        'category': category,
-        'components': components.map((c) => c.toJson()).toList(),
-        'indication': indication,
-        'contraindication': contraindication,
-        'dosage': dosage,
-        'preparation': preparation,
-        'explanation': explanation,
-        'keywords': keywords,
-      };
+    'id': id,
+    'name': name,
+    'alias': alias,
+    'meridian': meridian,
+    'category': category,
+    'components': components.map((c) => c.toJson()).toList(),
+    'indication': indication,
+    'contraindication': contraindication,
+    'dosage': dosage,
+    'preparation': preparation,
+    'explanation': explanation,
+    'keywords': keywords,
+  };
 
   String get componentsText =>
       components.map((c) => '${c.name}${c.dosage}').join('、');
@@ -72,11 +70,13 @@ class FormulaComponent {
   final String name;
   final String dosage;
   final String role;
+  final String clinical;
 
   FormulaComponent({
     required this.name,
     this.dosage = '',
     this.role = '',
+    this.clinical = '',
   });
 
   factory FormulaComponent.fromJson(Map<String, dynamic> json) {
@@ -84,12 +84,14 @@ class FormulaComponent {
       name: json['name'] as String,
       dosage: json['dosage'] as String? ?? '',
       role: json['role'] as String? ?? '',
+      clinical: json['clinical'] as String? ?? '',
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'dosage': dosage,
-        'role': role,
-      };
+    'name': name,
+    'dosage': dosage,
+    'role': role,
+    'clinical': clinical,
+  };
 }

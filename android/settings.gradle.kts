@@ -42,6 +42,8 @@ dependencyResolutionManagement {
             mavenCentral()
             maven("https://storage.googleapis.com/download.flutter.io")
         } else {
+            // 本机 D 盘缓存：避免 Flutter x86_64 引擎包重复走慢速远程下载。
+            maven { url = uri("D:/flutter-local-maven") }
             // 阿里云镜像优先（AGP/androidx 等）
             maven("https://maven.aliyun.com/repository/google")
             maven("https://maven.aliyun.com/repository/public")

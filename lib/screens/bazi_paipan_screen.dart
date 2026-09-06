@@ -4,7 +4,8 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:nihaisha_app/services/bazi_service.dart';
 import 'package:nihaisha_app/data/settings_repository.dart';
-import 'package:nihaisha_app/engine/bazi_twelve_stages.dart' show TwelveStageMode;
+import 'package:nihaisha_app/engine/bazi_twelve_stages.dart'
+    show TwelveStageMode;
 import 'package:ziwei_core/ziwei_core.dart' show Location;
 
 import 'package:nihaisha_app/widgets/bazi_location_picker.dart';
@@ -59,7 +60,8 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
     super.initState();
     // 同步共享排盘设置（与设置页双向一致）
     _fireEarthSame = SettingsRepository.instance.fireEarthSame;
-    _earlyZiShi = !SettingsRepository.instance.lateZiShiEnabled; // 全局晚子时(true) -> 早子时取反
+    _earlyZiShi =
+        !SettingsRepository.instance.lateZiShiEnabled; // 全局晚子时(true) -> 早子时取反
     _locName = SettingsRepository.instance.lastCityName;
     _locLng = SettingsRepository.instance.lastLng;
     _locLat = SettingsRepository.instance.lastLat;
@@ -73,8 +75,9 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
     try {
       final hour = _shiChen[_shiChenIndex].$2;
       final solar = DateTime(_year, _month, _day, hour, 0);
-      final location =
-          (_locLng != null) ? Location(_locLng!, _locLat ?? 30) : null;
+      final location = (_locLng != null)
+          ? Location(_locLng!, _locLat ?? 30)
+          : null;
       final r = computeBaZiPaipan(
         solar,
         isMale: _isMale,
@@ -108,26 +111,26 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
       ..writeln('【八字排盘】')
       ..writeln('四柱：${pillars.join(' ')}')
       ..writeln('十神：${r.tenGods.join(' ')}')
-      ..writeln(
-          '纳音：${[for (final p in pillars) nayinOfPillar(p)].join(' ')}')
+      ..writeln('纳音：${[for (final p in pillars) nayinOfPillar(p)].join(' ')}')
       ..writeln('旬空：${r.kongWang.isEmpty ? '无' : r.kongWang.join('、')}')
       ..writeln('关系：${r.relations.isEmpty ? '无' : r.relations.join('、')}');
     final f = _fortune;
     if (f != null) {
       b.writeln(
-          '起运：${f.startAge.toStringAsFixed(1)} 岁（${f.qiYunTime.year} 年交运）');
+        '起运：${f.startAge.toStringAsFixed(1)} 岁（${f.qiYunTime.year} 年交运）',
+      );
       b.writeln('大运：${f.decades.map((d) => d.ganZhi).join(' → ')}');
     }
-    b.writeln('—— 来自汉唐中医（民俗文化参考，非医疗建议）');
+    b.writeln('—— 来自岐黄经方（民俗文化参考，非医疗建议）');
     return b.toString();
   }
 
   Future<void> _copyShareText() async {
     await Clipboard.setData(ClipboardData(text: _buildShareText()));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已复制排盘文本')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('已复制排盘文本')));
   }
 
   Future<void> _shareResult() async {
@@ -137,13 +140,10 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
   int _daysInMonth(int year, int month) {
     if (month < 1 || month > 12) return 31;
     if (month == 2) {
-      final isLeap =
-          (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+      final isLeap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
       return isLeap ? 29 : 28;
     }
-    return (month == 4 || month == 6 || month == 9 || month == 11)
-        ? 30
-        : 31;
+    return (month == 4 || month == 6 || month == 9 || month == 11) ? 30 : 31;
   }
 
   void _clampDay() {
@@ -155,20 +155,23 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('八字排盘'), actions: [
-    if (_result != null) ...[
-      IconButton(
-        icon: const Icon(Icons.copy_outlined),
-        tooltip: '复制排盘文本',
-        onPressed: _copyShareText,
+      appBar: AppBar(
+        title: const Text('八字排盘'),
+        actions: [
+          if (_result != null) ...[
+            IconButton(
+              icon: const Icon(Icons.copy_outlined),
+              tooltip: '复制排盘文本',
+              onPressed: _copyShareText,
+            ),
+            IconButton(
+              icon: const Icon(Icons.share_outlined),
+              tooltip: '分享',
+              onPressed: _shareResult,
+            ),
+          ],
+        ],
       ),
-      IconButton(
-        icon: const Icon(Icons.share_outlined),
-        tooltip: '分享',
-        onPressed: _shareResult,
-      ),
-    ],
-  ]),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -185,8 +188,11 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
                 _locLng = city.lng;
                 _locLat = city.lat;
               });
-              SettingsRepository.instance
-                  .setLastLocation(city.name, city.lng, city.lat);
+              SettingsRepository.instance.setLastLocation(
+                city.name,
+                city.lng,
+                city.lat,
+              );
               if (_result != null) _compute(); // 地点变更后重排
             },
           ),
@@ -307,9 +313,7 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
                       for (int i = 0; i < _shiChen.length; i++)
                         DropdownMenuItem(
                           value: i,
-                          child: Text(
-                            '${_shiChen[i].$1} (${_shiChen[i].$3})',
-                          ),
+                          child: Text('${_shiChen[i].$1} (${_shiChen[i].$3})'),
                         ),
                     ],
                     onChanged: (v) => setState(() => _shiChenIndex = v!),
@@ -332,14 +336,8 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
             const SizedBox(height: 12),
             SegmentedButton<bool>(
               segments: const [
-                ButtonSegment(
-                  value: true,
-                  label: Text('火土同宫'),
-                ),
-                ButtonSegment(
-                  value: false,
-                  label: Text('水土同宫'),
-                ),
+                ButtonSegment(value: true, label: Text('火土同宫')),
+                ButtonSegment(value: false, label: Text('水土同宫')),
               ],
               selected: {_fireEarthSame},
               onSelectionChanged: (s) {
@@ -350,14 +348,8 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
             const SizedBox(height: 12),
             SegmentedButton<bool>(
               segments: const [
-                ButtonSegment(
-                  value: false,
-                  label: Text('晚子时'),
-                ),
-                ButtonSegment(
-                  value: true,
-                  label: Text('早子时'),
-                ),
+                ButtonSegment(value: false, label: Text('晚子时')),
+                ButtonSegment(value: true, label: Text('早子时')),
               ],
               selected: {_earlyZiShi},
               onSelectionChanged: (s) {

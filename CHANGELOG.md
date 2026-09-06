@@ -1,4 +1,4 @@
-# 汉唐中医 App 更新日志（Changelog）
+# 岐黄经方 App 更新日志（Changelog）
 
 > **维护约定**：本文件为项目根目录的官方变更记录。**每次发布 / 打包更新项目，必须在此追加对应版本条目**（版本号 + 变更要点 + 验证结果 + 发布信息）。
 >
@@ -9,6 +9,17 @@
 > **验证基线**：全量 `flutter test` 182/182 通过；`flutter analyze` 0 新增 error；APK 经 `aapt2`（D:/sdk/build-tools/36.0.0/aapt2.exe）校验 `versionCode`/`versionName`。
 >
 > **发布方式**：推送 `v*` tag 即由 **GitHub Actions** 自动编译并发布四个 APK 到同名 Release（配置见 `.github/workflows/build-apk.yml`，全程约 6 分钟），无需手动打包上传。如需国内加速分发，可另用 CloudStudio 部署下载页（`deploy_vXXXX/index.html` + APK）。
+
+---
+
+## [1.11.14+4002] - 2026-09-06 — 品牌定制 + 离线卡密 v2 + 手动更新
+
+- 应用更名为「岐黄经方」，替换图标与玉绿/古金固定品牌色。
+- 新增设备绑定的 19 位 HMAC-SHA256 离线卡密，支持期限卡与永久卡。
+- 首次启动激活闸门，设置页授权信息，到期拦截与 7 天提醒。
+- 移除启动时自动更新请求，手动检查改用 1390613925-boop/nihaixia-app Releases。
+- 移除主题自选入口，深浅色固定跟随系统。
+- 保留 Apache-2.0 LICENSE，新增 NOTICE 修改声明。
 
 ---
 

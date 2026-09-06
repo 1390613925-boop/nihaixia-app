@@ -5,6 +5,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../data/settings_repository.dart';
 import '../data/database_helper.dart';
 import '../data/changelog_repository.dart';
@@ -31,21 +32,12 @@ void showSettingsDialog(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === 外观设置 ===
-              const Text('外观', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 8),
-              const Text('暗黑模式', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              SegmentedButton<ThemeMode>(
-                segments: const [
-                  ButtonSegment(value: ThemeMode.system, label: Text('跟随系统')),
-                  ButtonSegment(value: ThemeMode.light, label: Text('浅色')),
-                  ButtonSegment(value: ThemeMode.dark, label: Text('深色')),
-                ],
-                selected: {settings.themeMode},
-                onSelectionChanged: (s) => settings.setThemeMode(s.first),
+              // === 阅读设置（品牌配色固定，深浅色跟随系统） ===
+              const Text(
+                '阅读',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const Text('字体大小', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Row(
@@ -68,14 +60,21 @@ void showSettingsDialog(
               const Divider(height: 24),
 
               // === 诊断设置 ===
-              const Text('诊断', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                '诊断',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               const SizedBox(height: 8),
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('默认性别'),
-                subtitle: Text(settings.defaultGender.isEmpty
-                    ? '未设置（每次询问）'
-                    : settings.defaultGender == 'male' ? '男' : '女'),
+                subtitle: Text(
+                  settings.defaultGender.isEmpty
+                      ? '未设置（每次询问）'
+                      : settings.defaultGender == 'male'
+                      ? '男'
+                      : '女',
+                ),
                 contentPadding: EdgeInsets.zero,
                 trailing: SegmentedButton<String>(
                   segments: const [
@@ -90,7 +89,9 @@ void showSettingsDialog(
               ListTile(
                 leading: const Icon(Icons.format_list_numbered),
                 title: const Text('诊断详细度'),
-                subtitle: Text(settings.diagnosticLevel == 'simple' ? '简单模式' : '详细模式'),
+                subtitle: Text(
+                  settings.diagnosticLevel == 'simple' ? '简单模式' : '详细模式',
+                ),
                 contentPadding: EdgeInsets.zero,
                 trailing: SegmentedButton<String>(
                   segments: const [
@@ -98,7 +99,8 @@ void showSettingsDialog(
                     ButtonSegment(value: 'detailed', label: Text('详细')),
                   ],
                   selected: {settings.diagnosticLevel},
-                  onSelectionChanged: (s) => settings.setDiagnosticLevel(s.first),
+                  onSelectionChanged: (s) =>
+                      settings.setDiagnosticLevel(s.first),
                 ),
               ),
               SwitchListTile(
@@ -113,7 +115,10 @@ void showSettingsDialog(
               const Divider(height: 24),
 
               // === 数据管理 ===
-              const Text('数据管理', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                '数据管理',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               const SizedBox(height: 8),
               ListTile(
                 leading: Icon(Icons.history, color: context.colors.warning),
@@ -136,7 +141,10 @@ void showSettingsDialog(
                 },
               ),
               ListTile(
-                leading: Icon(Icons.cleaning_services, color: context.colors.info),
+                leading: Icon(
+                  Icons.cleaning_services,
+                  color: context.colors.info,
+                ),
                 title: const Text('清理缓存'),
                 subtitle: const Text('清理临时文件释放空间'),
                 contentPadding: EdgeInsets.zero,
@@ -204,9 +212,9 @@ void confirmClearHistory(BuildContext context) {
             await DatabaseHelper.instance.clearDiagnosisHistory();
             if (context.mounted) {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('诊断历史已清除')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('诊断历史已清除')));
             }
           },
           child: const Text('清除'),
@@ -221,13 +229,13 @@ Future<void> exportBookmarks(BuildContext context) async {
   if (!context.mounted) return;
 
   if (bookmarks.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('暂无收藏')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('暂无收藏')));
     return;
   }
 
-  String text = '【汉唐中医·收藏导出】\n\n';
+  String text = '【岐黄经方·收藏导出】\n\n';
   for (final b in bookmarks) {
     text += '━━━━━━━━━━━━━━\n';
     text += '${b.title}\n';
@@ -235,7 +243,7 @@ Future<void> exportBookmarks(BuildContext context) async {
     text += '${b.createdAt}\n\n';
     text += '${b.content}\n\n';
   }
-  text += '—— 来自「汉唐中医」App';
+  text += '—— 来自「岐黄经方」App';
 
   await Share.share(text);
 }
@@ -261,15 +269,15 @@ Future<void> clearAppCache(BuildContext context) async {
     }
     if (context.mounted) {
       final sizeMB = (totalSize / 1024 / 1024).toStringAsFixed(1);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已清理 ${sizeMB}MB 缓存')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('已清理 ${sizeMB}MB 缓存')));
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('清理缓存失败：$e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('清理缓存失败：$e')));
     }
   }
 }
@@ -295,49 +303,79 @@ Future<void> showAboutPage(BuildContext context) async {
             Center(
               child: Column(
                 children: [
-                  Icon(Icons.local_hospital, size: 64,
-                      color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.local_hospital,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(height: 8),
-                  const Text('汉唐中医', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    '岐黄经方',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 4),
-                  Text('v${info.version}', style: TextStyle(color: context.colors.onSurfaceVariant)),
+                  Text(
+                    'v${info.version}',
+                    style: TextStyle(color: context.colors.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
-            const Text('六经辨证诊断助手', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              '六经辨证诊断助手',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('基于倪海厦老师《伤寒论》六经辨证体系，'
-                '通过七步问诊提供中医辨证建议。', style: TextStyle(color: context.colors.onSurfaceVariant)),
+            Text(
+              '基于倪海厦老师《伤寒论》六经辨证体系，'
+              '通过七步问诊提供中医辨证建议。',
+              style: TextStyle(color: context.colors.onSurfaceVariant),
+            ),
             const SizedBox(height: 16),
             const Text('功能特色', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('• 六经辨证智能诊断\n'
-                '• 舌诊脉诊参考\n'
-                '• 经方方剂库\n'
-                '• 医案收藏与分享\n'
-                '• 辅助诊断公式验证'),
+            Text(
+              '• 六经辨证智能诊断\n'
+              '• 舌诊脉诊参考\n'
+              '• 经方方剂库\n'
+              '• 医案收藏与分享\n'
+              '• 辅助诊断公式验证',
+            ),
             const SizedBox(height: 16),
             const Text('更新日志', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (entries.isEmpty)
-              Text('暂无更新记录', style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12))
+              Text(
+                '暂无更新记录',
+                style: TextStyle(
+                  color: context.colors.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              )
             else
               ...entries.map((e) => _buildChangelogEntry(context, e)).toList(),
             const SizedBox(height: 16),
             const Text('致谢', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('倪海厦老师 · 经方医学传承\n'
-                '仲景先师 · 伤寒论原典',
-                style: TextStyle(color: context.colors.onSurfaceVariant)),
+            Text(
+              '倪海厦老师 · 经方医学传承\n'
+              '仲景先师 · 伤寒论原典',
+              style: TextStyle(color: context.colors.onSurfaceVariant),
+            ),
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
             Center(
-              child: Text('© 2024-2026 汉唐中医',
-                  style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+              child: Text(
+                '© 2024-2026 岐黄经方',
+                style: TextStyle(
+                  color: context.colors.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ],
         ),
@@ -359,7 +397,9 @@ Widget _buildChangelogEntry(BuildContext context, ChangelogEntry e) {
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
-      color: isLatest ? context.colors.infoContainer : context.colors.surfaceContainerHighest,
+      color: isLatest
+          ? context.colors.infoContainer
+          : context.colors.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(8),
       border: Border.all(
         color: isLatest ? context.colors.info : context.colors.outlineVariant,
@@ -370,11 +410,18 @@ Widget _buildChangelogEntry(BuildContext context, ChangelogEntry e) {
       children: [
         Row(
           children: [
-            Text('v${e.version}',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'v${e.version}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(width: 8),
-            Text(e.date,
-                style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+            Text(
+              e.date,
+              style: TextStyle(
+                color: context.colors.onSurfaceVariant,
+                fontSize: 12,
+              ),
+            ),
             if (isLatest) ...[
               const SizedBox(width: 8),
               Container(
@@ -383,23 +430,34 @@ Widget _buildChangelogEntry(BuildContext context, ChangelogEntry e) {
                   color: context.colors.successContainer,
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text('最新',
-                    style: TextStyle(color: context.colors.success, fontSize: 10)),
+                child: Text(
+                  '最新',
+                  style: TextStyle(color: context.colors.success, fontSize: 10),
+                ),
               ),
             ],
           ],
         ),
         if (e.title.isNotEmpty) ...[
           const SizedBox(height: 2),
-          Text(e.title,
-              style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
+          Text(
+            e.title,
+            style: TextStyle(
+              color: context.colors.onSurfaceVariant,
+              fontSize: 12,
+            ),
+          ),
         ],
         const SizedBox(height: 6),
-        ...e.changes.map((c) => Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Text('• $c',
-                  style: const TextStyle(fontSize: 12, height: 1.4)),
-            )),
+        ...e.changes.map(
+          (c) => Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              '• $c',
+              style: const TextStyle(fontSize: 12, height: 1.4),
+            ),
+          ),
+        ),
       ],
     ),
   );
@@ -428,9 +486,9 @@ Future<void> checkForUpdate(BuildContext context) async {
 
   if (updateInfo == null) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已是最新版本')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('已是最新版本')));
     return;
   }
 
@@ -467,11 +525,13 @@ void showUpdateDialog(BuildContext context, UpdateInfo info) {
           child: const Text('忽略此版本'),
         ),
         FilledButton(
-          onPressed: () {
-            Navigator.pop(context);
-            downloadAndInstall(context, info);
+          onPressed: () async {
+            final uri = Uri.parse(info.releasePageUrl);
+            if (await canLaunchUrl(uri))
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            if (context.mounted) Navigator.pop(context);
           },
-          child: const Text('下载更新'),
+          child: const Text('打开发布页'),
         ),
       ],
     ),
@@ -492,9 +552,9 @@ Future<void> downloadAndInstall(BuildContext context, UpdateInfo info) async {
           if (file != null) {
             installApk(file, context);
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('下载失败，请稍后重试')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('下载失败，请稍后重试')));
           }
         });
         return AlertDialog(
@@ -526,8 +586,8 @@ Future<void> installApk(dynamic file, BuildContext context) async {
     }
   } catch (e) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('安装失败：$e')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('安装失败：$e')));
   }
 }

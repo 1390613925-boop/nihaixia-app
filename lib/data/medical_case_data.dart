@@ -62,7 +62,11 @@ List<String> extractDiseaseNames(String text) {
   return _diseaseNameCache.putIfAbsent(text, () {
     final candidates = DiseaseRepository.candidates;
     return List.unmodifiable(
-      extractKnownNames(text, candidates, resolve: DiseaseRepository.resolveDisease),
+      extractKnownNames(
+        text,
+        candidates,
+        resolve: DiseaseRepository.resolveDisease,
+      ),
     );
   });
 }
@@ -78,10 +82,7 @@ List<String> extractKnownNames(
   List<String> candidates, {
   required String? Function(String candidate) resolve,
 }) {
-  final sorted = candidates
-      .where((c) => c.length >= 2)
-      .toSet()
-      .toList()
+  final sorted = candidates.where((c) => c.length >= 2).toSet().toList()
     ..sort((a, b) => b.length.compareTo(a.length));
   if (sorted.isEmpty) return const [];
 
@@ -164,10 +165,9 @@ List<MedicalCase> findRelatedCases(
   }
   final name = c.displayName;
   if (name.isEmpty || name == '（未命名）') return const [];
-  final same = all
-      .where((o) => o.seq != c.seq && o.displayName == name)
-      .toList()
-    ..sort((a, b) => a.seq.compareTo(b.seq));
+  final same =
+      all.where((o) => o.seq != c.seq && o.displayName == name).toList()
+        ..sort((a, b) => a.seq.compareTo(b.seq));
   return same.take(max).toList();
 }
 
@@ -333,7 +333,7 @@ class MedicalCase {
     section('结果', result);
     section('观点', view);
     buf.writeln('\n─────────────────');
-    buf.write('汉唐中医 · 倪海厦六经辨证（传统文化参考，非医疗建议）');
+    buf.write('岐黄经方 · 倪海厦六经辨证（传统文化参考，非医疗建议）');
     return buf.toString();
   }
 }
@@ -383,20 +383,22 @@ List<MedicalCase> parseMedicalCaseTable(String md) {
     if (formula.contains('未公开')) continue;
     if (formula.trim() == '未提及') continue;
 
-    cases.add(MedicalCase(
-      seq: seq,
-      date: padded[1],
-      patient: padded[2],
-      diagnosis: padded[3],
-      mechanism: padded[4],
-      western: padded[5],
-      formula: padded[6],
-      acupuncture: padded[7],
-      method: padded[8],
-      result: padded[9],
-      advice: padded[10],
-      view: padded[11],
-    ));
+    cases.add(
+      MedicalCase(
+        seq: seq,
+        date: padded[1],
+        patient: padded[2],
+        diagnosis: padded[3],
+        mechanism: padded[4],
+        western: padded[5],
+        formula: padded[6],
+        acupuncture: padded[7],
+        method: padded[8],
+        result: padded[9],
+        advice: padded[10],
+        view: padded[11],
+      ),
+    );
   }
 
   return cases;

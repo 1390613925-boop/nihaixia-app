@@ -14,6 +14,7 @@ class UpdateInfo {
   final String body;
   final String apkDownloadUrl;
   final int apkSize;
+  final String releasePageUrl;
 
   UpdateInfo({
     required this.version,
@@ -21,11 +22,12 @@ class UpdateInfo {
     required this.body,
     required this.apkDownloadUrl,
     required this.apkSize,
+    this.releasePageUrl = '',
   });
 }
 
 class UpdateService {
-  static const _repoOwner = 'jangviktor-web';
+  static const _repoOwner = '1390613925-boop';
   static const _repoName = 'nihaixia-app';
   static const _ignoredVersionKey = 'ignored_update_version';
   static const _permanentlyIgnoredKey = 'permanently_ignored_versions';
@@ -41,8 +43,11 @@ class UpdateService {
   static Future<bool> isMirrorEnabled() async {
     try {
       final db = await DatabaseHelper.instance.database;
-      final rows = await db.query('user_settings',
-          where: "key = ?", whereArgs: [_mirrorEnabledKey]);
+      final rows = await db.query(
+        'user_settings',
+        where: "key = ?",
+        whereArgs: [_mirrorEnabledKey],
+      );
       if (rows.isEmpty) return true;
       return (rows.first['value'] as String) == 'true';
     } catch (_) {
@@ -53,11 +58,10 @@ class UpdateService {
   /// 设置是否启用镜像加速
   static Future<void> setMirrorEnabled(bool enabled) async {
     final db = await DatabaseHelper.instance.database;
-    await db.insert(
-      'user_settings',
-      {'key': _mirrorEnabledKey, 'value': enabled ? 'true' : 'false'},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('user_settings', {
+      'key': _mirrorEnabledKey,
+      'value': enabled ? 'true' : 'false',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 检查是否有新版本（自动尝试主源 + 镜像源）
@@ -74,10 +78,12 @@ class UpdateService {
       Map<String, dynamic>? releaseData;
       for (final url in sources) {
         try {
-          final response = await http.get(Uri.parse(url)).timeout(
-            const Duration(seconds: 10),
-            onTimeout: () => throw Exception('网络超时'),
-          );
+          final response = await http
+              .get(Uri.parse(url))
+              .timeout(
+                const Duration(seconds: 10),
+                onTimeout: () => throw Exception('网络超时'),
+              );
           if (response.statusCode == 200) {
             releaseData = json.decode(response.body) as Map<String, dynamic>;
             break;
@@ -114,6 +120,9 @@ class UpdateService {
         body: releaseData['body'] ?? '暂无更新说明',
         apkDownloadUrl: apkUrl,
         apkSize: apkSize,
+        releasePageUrl:
+            releaseData['html_url'] ??
+            'https://github.com/$_repoOwner/$_repoName/releases/latest',
       );
     } catch (e) {
       debugPrint('检查更新失败: $e');
@@ -138,15 +147,21 @@ class UpdateService {
   /// 检查版本是否已被忽略
   static Future<bool> _isIgnored(String version) async {
     final db = await DatabaseHelper.instance.database;
-    final rows = await db.query('user_settings',
-        where: "key = ?", whereArgs: [_permanentlyIgnoredKey]);
+    final rows = await db.query(
+      'user_settings',
+      where: "key = ?",
+      whereArgs: [_permanentlyIgnoredKey],
+    );
     if (rows.isNotEmpty) {
       final ignored = (rows.first['value'] as String).split(',');
       if (ignored.contains(version)) return true;
     }
 
-    final ignoreRow = await db.query('user_settings',
-        where: "key = ?", whereArgs: [_ignoredVersionKey]);
+    final ignoreRow = await db.query(
+      'user_settings',
+      where: "key = ?",
+      whereArgs: [_ignoredVersionKey],
+    );
     if (ignoreRow.isNotEmpty && ignoreRow.first['value'] == version) {
       return true;
     }
@@ -157,19 +172,21 @@ class UpdateService {
   /// 忽略当前版本（下次还会提醒）
   static Future<void> ignoreVersion(String version) async {
     final db = await DatabaseHelper.instance.database;
-    await db.insert(
-      'user_settings',
-      {'key': _ignoredVersionKey, 'value': version},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('user_settings', {
+      'key': _ignoredVersionKey,
+      'value': version,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 永久忽略版本
   static Future<void> permanentlyIgnoreVersion(String version) async {
     final db = await DatabaseHelper.instance.database;
     // 读取现有永久忽略列表
-    final rows = await db.query('user_settings',
-        where: "key = ?", whereArgs: [_permanentlyIgnoredKey]);
+    final rows = await db.query(
+      'user_settings',
+      where: "key = ?",
+      whereArgs: [_permanentlyIgnoredKey],
+    );
     List<String> ignored = [];
     if (rows.isNotEmpty) {
       final val = rows.first['value'] as String;
@@ -177,11 +194,10 @@ class UpdateService {
     }
     if (!ignored.contains(version)) ignored.add(version);
 
-    await db.insert(
-      'user_settings',
-      {'key': _permanentlyIgnoredKey, 'value': ignored.join(',')},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('user_settings', {
+      'key': _permanentlyIgnoredKey,
+      'value': ignored.join(','),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 下载APK文件（自动尝试主源 + 镜像源，首字节超时即切换）
@@ -216,9 +232,9 @@ class UpdateService {
       if (await file.exists()) await file.delete();
 
       final request = http.Request('GET', Uri.parse(url));
-      final response = await client.send(request).timeout(
-        const Duration(minutes: 5),
-      );
+      final response = await client
+          .send(request)
+          .timeout(const Duration(minutes: 5));
       if (response.statusCode != 200) {
         debugPrint('下载失败[HTTP ${response.statusCode}]: $url');
         return null;
