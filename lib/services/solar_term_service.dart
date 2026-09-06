@@ -20,12 +20,20 @@ class SolarTermInfo {
   /// 当季养生要点（中医视角，简明）。
   final String healthTip;
 
+  /// 当前节气公历约期（如「2月3-5日」，每年浮动约±1天）。
+  final String approxDate;
+
+  /// 当前节气太阳黄经（度，如立春 315°）。
+  final int solarLongitude;
+
   const SolarTermInfo({
     required this.currentTerm,
     required this.nextTerm,
     required this.daysInto,
     required this.daysLeft,
     required this.healthTip,
+    this.approxDate = '',
+    this.solarLongitude = 0,
   });
 }
 
@@ -39,10 +47,22 @@ class SolarTermKnowledge {
   final String health;
   final String niShi;
 
+  /// 节气三候（物候现象，如立春：东风解冻、蛰虫始振、鱼陟负冰）。
+  final List<String> phenology;
+
+  /// 起居调摄（倪师视角整理，非逐字原文均标注【推断】）。
+  final String dailyRegimen;
+
+  /// 节气食疗方 / 代茶饮建议。
+  final String dietRecipe;
+
   const SolarTermKnowledge({
     required this.term,
     required this.health,
     required this.niShi,
+    this.phenology = const [],
+    this.dailyRegimen = '',
+    this.dietRecipe = '',
   });
 
   factory SolarTermKnowledge.fromJson(Map<String, dynamic> json) =>
@@ -50,6 +70,12 @@ class SolarTermKnowledge {
         term: json['term'] as String,
         health: json['health'] as String,
         niShi: json['niShi'] as String,
+        phenology: (json['phenology'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            const [],
+        dailyRegimen: json['dailyRegimen'] as String? ?? '',
+        dietRecipe: json['dietRecipe'] as String? ?? '',
       );
 }
 
@@ -80,6 +106,68 @@ const Map<String, String> _healthTips = {
   '大雪': '封藏极盛，滋补肾精，静养少泄。',
   '冬至': '一阳来复，养藏护阳，节欲少劳。',
 };
+
+/// 24 节气公历约期（每年浮动约±1天，标注常见区间）。
+const Map<String, String> _termApproxDate = {
+  '小寒': '1月5-7日',
+  '大寒': '1月20-21日',
+  '立春': '2月3-5日',
+  '雨水': '2月18-20日',
+  '惊蛰': '3月5-7日',
+  '春分': '3月20-22日',
+  '清明': '4月4-6日',
+  '谷雨': '4月19-21日',
+  '立夏': '5月5-7日',
+  '小满': '5月20-22日',
+  '芒种': '6月5-7日',
+  '夏至': '6月21-22日',
+  '小暑': '7月6-8日',
+  '大暑': '7月22-24日',
+  '立秋': '8月7-9日',
+  '处暑': '8月22-24日',
+  '白露': '9月7-9日',
+  '秋分': '9月22-24日',
+  '寒露': '10月8-9日',
+  '霜降': '10月23-24日',
+  '立冬': '11月7-8日',
+  '小雪': '11月22-23日',
+  '大雪': '12月6-8日',
+  '冬至': '12月21-23日',
+};
+
+/// 24 节气太阳黄经（度，每个节气间隔 15°，立春起 315°）。
+const Map<String, int> _termSolarLongitude = {
+  '立春': 315,
+  '雨水': 330,
+  '惊蛰': 345,
+  '春分': 0,
+  '清明': 15,
+  '谷雨': 30,
+  '立夏': 45,
+  '小满': 60,
+  '芒种': 75,
+  '夏至': 90,
+  '小暑': 105,
+  '大暑': 120,
+  '立秋': 135,
+  '处暑': 150,
+  '白露': 165,
+  '秋分': 180,
+  '寒露': 195,
+  '霜降': 210,
+  '立冬': 225,
+  '小雪': 240,
+  '大雪': 255,
+  '冬至': 270,
+  '小寒': 285,
+  '大寒': 300,
+};
+
+/// 查询指定节气的公历约期（找不到返回空串）。
+String getTermApproxDate(String term) => _termApproxDate[term] ?? '';
+
+/// 查询指定节气的太阳黄经（度，找不到返回 0）。
+int getTermSolarLongitude(String term) => _termSolarLongitude[term] ?? 0;
 
 /// 全量节气养生知识缓存（首次访问按需从资源加载，幂等）。
 Map<String, SolarTermKnowledge>? _knowledgeCache;
@@ -128,5 +216,7 @@ SolarTermInfo getCurrentSolarTerm([DateTime? now]) {
     daysInto: info.daysSincePrevJieQi.round(),
     daysLeft: info.daysUntilNextJieQi.round(),
     healthTip: _healthTips[current] ?? '顺时养生，起居有常。',
+    approxDate: _termApproxDate[current] ?? '',
+    solarLongitude: _termSolarLongitude[current] ?? 0,
   );
 }
