@@ -294,6 +294,11 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
           ),
           if (_result != null) ...[
             const SizedBox(height: 12),
+            Text(
+              '出生农历：${_result!.lunarText}',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
             BaZiFourPillarsCard(result: _result!),
             const SizedBox(height: 12),
             // 添加到命盘库（与紫微排盘共用命盘库；Material 图标，无 emoji）

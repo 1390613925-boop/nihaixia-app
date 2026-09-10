@@ -1,5 +1,13 @@
 import 'package:ziwei_core/ziwei_core.dart';
 
+const List<String> _zTiangan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+const List<String> _zDizhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+String _lunarYearGanZhi(int year) {
+  var i = (year - 4) % 60;
+  if (i < 0) i += 60;
+  return _zTiangan[i % 10] + _zDizhi[i % 12];
+}
+
 /// 紫微斗数排盘引擎封装层。
 ///
 /// 把 [ziwei_core] 的底层对象（[ZiWeiPlate] / [Palace] / [Star]）抽取成与 UI 无关、
@@ -546,14 +554,21 @@ ZiweiChart calculateZiweiChart({
   final baziDay = '${bz.day.gan.label}${bz.day.zhi.label}';
   final baziTime = '${bz.time.gan.label}${bz.time.zhi.label}';
 
+  // 出生农历按「日历日正午」取，与八字屏 / 关煞屏同口径（见 bazi_service）：
+  // 避免午夜出生 + 真太阳时把农历回拨到前一天，导致三屏展示不一致。
+  final lunar = LunarDate.fromSolar(
+    AstroDateTime(solar.year, solar.month, solar.day, 12, 0, 0),
+  );
+
   ZiweiChart chart = ZiweiChart(
     baziYear: baziYear,
     baziMonth: baziMonth,
     baziDay: baziDay,
     baziTime: baziTime,
-    lunarText: '农历 ${date.lunar}',
-    lunarMonth: date.lunar.month,
-    lunarIsLeap: date.lunar.isLeap,
+    lunarText:
+        '${_lunarYearGanZhi(lunar.lunarYear)}（${solar.year}）年${lunar.monthNameStr}月${lunar.dayName}',
+    lunarMonth: lunar.month,
+    lunarIsLeap: lunar.isLeap,
     genderLabel: gender == Gender.male ? '男' : '女',
     elementBureauLabel: plate.elementBureau.label,
     mingZhuLabel:
@@ -567,8 +582,14 @@ ZiweiChart calculateZiweiChart({
     decades: decades,
     basePlate: plate,
   );
+  // 早晚子时以「真太阳时校正后」的小时判定（与 bazi_service 同口径）：真太阳时
+  // 校正在 ZiweiDate 内部完成，若用原始小时先判子时会出现顺序颠倒
+  //（先 +1 天再被校正回前一天 → 日柱差一天、时柱落到亥时）。
+  final zTst = date.trueSolarTime;
+  final effHour =
+      (useTrueSolarTime && zTst != null) ? zTst.hour : solar.hour;
   // 晚子时：时柱取「次日子时」与八字口径一致（日柱 / 命宫 / 农历保持当天口径）。
-  if (ratHourMode && solar.hour >= 23) {
+  if (ratHourMode && effHour >= 23) {
     final nextTime = calcZiweiBaZi(
       DateTime(solar.year, solar.month, solar.day, solar.hour, solar.minute),
       location: location,
@@ -581,7 +602,7 @@ ZiweiChart calculateZiweiChart({
   // 早子时：日柱取次日、时柱子时、农历同步切换到次日（约束 B）。
   // 单独以「出生日 +1 天」构造一个只读 ZiweiDate，仅用于提取校正后的干支与农历，
   // 不进入内核排盘，确保原始 solar 不被偏移后喂内核（约束 A）。
-  else if (ratHourMode && solar.hour < 1) {
+  else if (ratHourMode && effHour < 1) {
     final nextSolar = DateTime(solar.year, solar.month, solar.day, solar.hour, solar.minute)
         .add(const Duration(days: 1));
     final nextDate = ZiweiDate.fromSolar(
@@ -592,12 +613,17 @@ ZiweiChart calculateZiweiChart({
       useTrueSolarTime: useTrueSolarTime,
     );
     final nbz = nextDate.bazi;
+    // 早子时农历同步切换到次日，同样取「日历日正午」口径，与主分支保持一致。
+    final nextLunar = LunarDate.fromSolar(
+      AstroDateTime(nextSolar.year, nextSolar.month, nextSolar.day, 12, 0, 0),
+    );
     chart = chart.copyWith(
       baziDay: '${nbz.day.gan.label}${nbz.day.zhi.label}',
       baziTime: '${nbz.time.gan.label}${nbz.time.zhi.label}',
-      lunarText: '农历 ${nextDate.lunar}',
-      lunarMonth: nextDate.lunar.month,
-      lunarIsLeap: nextDate.lunar.isLeap,
+      lunarText:
+          '${_lunarYearGanZhi(nextLunar.lunarYear)}（${nextSolar.year}）年${nextLunar.monthNameStr}月${nextLunar.dayName}',
+      lunarMonth: nextLunar.month,
+      lunarIsLeap: nextLunar.isLeap,
     );
   }
   return chart;

@@ -62,7 +62,7 @@ class CriticalIllnessListScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const Icon(Icons.chevron_right),
+                        Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -81,8 +81,15 @@ class CriticalIllnessListScreen extends StatelessWidget {
                         children: item.tags
                             .map(
                               (t) => ActionChip(
-                                label: Text(t,
-                                    style: const TextStyle(fontSize: 12)),
+                                label: Text(
+                                  t,
+                                  // 显式取 onSurface：chip 底色是 primaryContainer
+                                  // 半透明叠加，浅色/深色下都能保证 ≥4.5:1。
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: cs.onSurface,
+                                  ),
+                                ),
                                 backgroundColor: cs.primaryContainer
                                     .withValues(alpha: 0.5),
                                 materialTapTargetSize:

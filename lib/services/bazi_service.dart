@@ -19,12 +19,24 @@ import 'package:nihaisha_app/engine/bazi_ten_gods.dart'
 import 'package:nihaisha_app/engine/bazi_twelve_stages.dart'
     show TwelveStageMode, twelveStagesForPillars;
 import 'package:nihaisha_app/services/ziwei_engine.dart' show ZiweiBaZi;
+import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart' show LunarDate, AstroDateTime;
 import 'package:nihaisha_app/engine/bazi_extra.dart'
     show taiYuanOf, taiXiOf, kongWangPerPillar, selfTwelveStages, hiddenTenGods;
 
 /// 单柱干支（如「甲辰」）拆成 (干, 支)。
 (String, String) _splitGanZhi(String gz) =>
     (gz.substring(0, 1), gz.substring(1, 2));
+
+/// 由农历年份（天文纪年，如 2024）求对应干支（如 甲辰）。
+///
+/// 干支 60 年一循环，约定甲子为第 0 年，公历 4 年为甲子年基准。
+const List<String> _tiangan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+const List<String> _dizhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+String _lunarYearGanZhi(int year) {
+  var i = (year - 4) % 60;
+  if (i < 0) i += 60;
+  return _tiangan[i % 10] + _dizhi[i % 12];
+}
 
 /// 八字排盘结果聚合。
 class BaZiPaipan {
@@ -41,6 +53,7 @@ class BaZiPaipan {
   final List<String> kongWangPillars; // 各柱空亡（按各柱旬）
   final List<String> selfStages; // 自坐十二神
   final List<List<String>> hiddenTenGods; // 副星（各柱藏干十神）
+  final String lunarText; // 出生农历（如「甲辰（2024）年正月初一」）
 
   const BaZiPaipan({
     required this.bazi,
@@ -56,6 +69,7 @@ class BaZiPaipan {
     required this.kongWangPillars,
     required this.selfStages,
     required this.hiddenTenGods,
+    required this.lunarText,
   });
 }
 
@@ -67,7 +81,9 @@ class BaZiPaipan {
 class _BaziChartBuild {
   final bazi.BaziChart chart;
   final String? timeOverride;
-  _BaziChartBuild(this.chart, this.timeOverride);
+  /// 是否命中早子时（校正后 00:00–01:00）：命中时日柱取次日，农历同步 +1 天。
+  final bool earlyZi;
+  _BaziChartBuild(this.chart, this.timeOverride, {this.earlyZi = false});
 }
 
 _BaziChartBuild _buildBaziChart(
@@ -81,7 +97,22 @@ _BaziChartBuild _buildBaziChart(
   final loc = location ?? Location(120, 30);
   final astro = bazi.AstroDateTime(
       solar.year, solar.month, solar.day, solar.hour, solar.minute);
-  if (ratHourMode && hour >= 23) {
+  // 早晚子时必须以「真太阳时校正后」的小时判定：校正在引擎内部发生，
+  // 若先用原始小时判子时再让引擎校正（旧逻辑），跨子时场景会出现
+  // 「先 +1 天、再被校正回前一天」的顺序颠倒，日柱差一天、时柱落到亥时。
+  var effHour = hour;
+  if (useTrueSolarTime) {
+    final probe = bazi.BaziChart.createBySolarDate(
+      clockTime: astro,
+      location: loc,
+      ratHourMode: RatHourMode.todayGan,
+      useTrueSolarTime: true,
+      gender: gender,
+    );
+    // virtualTime = 引擎排盘基准时间（真太阳时开启时即校正后时刻）。
+    effHour = probe.time.virtualTime.hour;
+  }
+  if (ratHourMode && effHour >= 23) {
     // 晚子时：日柱用当天（todayGan），时柱用次日子时（noSplit）。
     final dayChart = bazi.BaziChart.createBySolarDate(
       clockTime: astro,
@@ -90,18 +121,25 @@ _BaziChartBuild _buildBaziChart(
       useTrueSolarTime: useTrueSolarTime,
       gender: gender,
     );
+    // 时柱取「校正后次日」的子时：noSplit 的换日判定基于原始 clockTime，
+    // 真太阳时开启时拿不到次日子时，故直接以次日 00:30（恒在子时、关闭二次
+    // 校正避免再偏移）排一盘取时柱。
+    final vt = dayChart.time.virtualTime;
+    final nextZi = bazi.AstroDateTime(vt.year, vt.month, vt.day, 0, 30)
+        .add(const Duration(days: 1));
     final timeChart = bazi.BaziChart.createBySolarDate(
-      clockTime: astro,
-      location: loc,
-      ratHourMode: RatHourMode.noSplit,
-      useTrueSolarTime: useTrueSolarTime,
+      clockTime: nextZi,
+      location: const Location(120, 30),
+      ratHourMode: RatHourMode.todayGan,
+      useTrueSolarTime: false,
       gender: gender,
     );
     return _BaziChartBuild(dayChart, '${timeChart.bazi.time}');
   }
-  if (ratHourMode && hour < 1) {
+  if (ratHourMode && effHour < 1) {
     // 早子时：bazi_core 的 noSplit 仅处理 23–24 点；00–01 点需将出生日 +1 天
     // 再按 todayGan 排盘，方得「日柱次日、时柱子时」。
+    // 此处传「原始日 +1 天」由引擎再校正一次，等价于「校正后日期 +1 天」。
     final nextSolar = solar.add(const Duration(days: 1));
     final nextAstro = bazi.AstroDateTime(
         nextSolar.year, nextSolar.month, nextSolar.day, nextSolar.hour, nextSolar.minute);
@@ -112,7 +150,7 @@ _BaziChartBuild _buildBaziChart(
       useTrueSolarTime: useTrueSolarTime,
       gender: gender,
     );
-    return _BaziChartBuild(chart, null);
+    return _BaziChartBuild(chart, null, earlyZi: true);
   }
   // 关闭开关，或 01:00–23:00：子时归自然日（todayGan）。
   final chart = bazi.BaziChart.createBySolarDate(
@@ -181,6 +219,14 @@ BaZiPaipan computeBaZiPaipan(
   final relations = detectBaziRelations(zhis);
   final stages = twelveStagesForPillars(dayGan, zhis, mode: twelveStageMode);
   final analysis = analyzeBaZi(gans: gans, zhis: zhis);
+  // 出生农历：取出生日正午，与黄历 / 紫微排盘同口径（见 lunar_almanac_service / ziwei_engine）。
+  // 早子时日柱取次日，农历基准日随之 +1 天，保证与日柱、与紫微屏一致。
+  final lunarBase = built.earlyZi ? solar.add(const Duration(days: 1)) : solar;
+  final lunar = LunarDate.fromSolar(
+    AstroDateTime(lunarBase.year, lunarBase.month, lunarBase.day, 12, 0, 0),
+  );
+  final lunarText =
+      '${_lunarYearGanZhi(lunar.lunarYear)}（${lunarBase.year}）年${lunar.monthNameStr}月${lunar.dayName}';
   return BaZiPaipan(
     bazi: ziweiBazi,
     gans: gans,
@@ -196,6 +242,7 @@ BaZiPaipan computeBaZiPaipan(
         kongWangPerPillar([ziweiBazi.year, ziweiBazi.month, ziweiBazi.day, ziweiBazi.time]),
     selfStages: selfTwelveStages(gans, zhis),
     hiddenTenGods: hiddenTenGods(gans, zhis),
+    lunarText: lunarText,
   );
 }
 

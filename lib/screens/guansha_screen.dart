@@ -280,13 +280,22 @@ class _GuanshaScreenState extends State<GuanshaScreen>
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+        child: Column(
           children: [
-            _pillar('年', pillars[0]),
-            _pillar('月', pillars[1]),
-            _pillar('日', pillars[2]),
-            _pillar('时', pillars[3]),
+            Text(
+              '出生农历：${p.lunarText}',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _pillar('年', pillars[0]),
+                _pillar('月', pillars[1]),
+                _pillar('日', pillars[2]),
+                _pillar('时', pillars[3]),
+              ],
+            ),
           ],
         ),
       ),

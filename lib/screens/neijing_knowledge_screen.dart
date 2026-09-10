@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../data/neijing_data.dart';
+import 'neijing_entries_screen.dart';
 import 'neijing_library_screen.dart';
 import 'neijing_search_screen.dart';
 import '../theme/app_colors.dart';
 
 /// 《人纪·黄帝内经》知识速查：五脏六腑脏象 / 五色望诊 / 常见脉象。
-/// AppBar 右侧：阅读库（72 篇全文）+ 全文搜索入口。
+/// AppBar 右侧：结构化条目（十维度）+ 阅读库（72 篇全文）+ 全文搜索入口。
 /// 内容提炼自倪师内经讲稿（书面整理版），属传统文化参考，非医疗建议。
 class NeijingKnowledgeScreen extends StatelessWidget {
   const NeijingKnowledgeScreen({super.key});
@@ -19,6 +20,18 @@ class NeijingKnowledgeScreen extends StatelessWidget {
         appBar: AppBar(
           title: const Text('黄帝内经 · 速查'),
           actions: [
+            IconButton(
+              tooltip: '结构化条目（十维度）',
+              icon: const Icon(Icons.grid_view_outlined),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NeijingEntriesScreen(),
+                  ),
+                );
+              },
+            ),
             IconButton(
               tooltip: '全文阅读库',
               icon: const Icon(Icons.menu_book_outlined),

@@ -729,6 +729,16 @@ class _ZiweiChartScreenState extends State<ZiweiChartScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              '出生农历：${chart.lunarText}',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '出生农历月：${chart.lunarMonthDisplay}',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 4),
             Row(
               children: [
                 const Text(
@@ -743,16 +753,6 @@ class _ZiweiChartScreenState extends State<ZiweiChartScreen> {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              chart.lunarText,
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '出生农历月：${chart.lunarMonthDisplay}',
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             Wrap(

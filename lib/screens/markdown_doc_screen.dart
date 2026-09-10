@@ -30,6 +30,95 @@ class MarkdownDocScreen extends StatefulWidget {
 
   @override
   State<MarkdownDocScreen> createState() => _MarkdownDocScreenState();
+
+  /// 构建随主题（含深色模式）生效的 Markdown 样式表。
+  ///
+  /// 修复背景：`MarkdownStyleSheet.fromTheme()` 有两处**不随主题切换**的硬编码：
+  /// - `blockquoteDecoration` 固定 `Colors.blue.shade100`（#BBDEFB 浅蓝底）。深色
+  ///   模式下引用块文字取 `textTheme.bodyMedium`（即 `onSurface` 近白 #F0DFD7），
+  ///   白字压浅蓝底实测对比度仅 **1.09:1**（WCAG AA 要求 ≥4.5:1）。闭门课正文
+  ///   通篇使用 `>` 引用块，故整页正文在深色模式下几乎不可读 —— 这正是
+  ///   「标题/正文后面那块蓝色背景」的来源。
+  /// - `a` 固定 `Colors.blue`（#2196F3），与品牌色不一致。
+  ///
+  /// 现全部改为读取 `ColorScheme` 语义色：文字统一 `onSurface`（深色 14.29:1 /
+  /// 浅色 16.30:1），引用块底色 `surfaceContainerHighest`（浅色 #F0DFD7 / 深色
+  /// #3D332D），并用一条 `primary` 竖线保留引用语义，蓝色块整体移除。
+  static MarkdownStyleSheet styleSheetFor(ThemeData theme) {
+    final cs = theme.colorScheme;
+    final body =
+        theme.textTheme.bodyMedium ?? const TextStyle(fontSize: 14);
+    final bodySize = body.fontSize ?? 14;
+    final tt = theme.textTheme;
+    return MarkdownStyleSheet(
+      a: TextStyle(color: cs.primary, decoration: TextDecoration.underline),
+      p: body.copyWith(color: cs.onSurface, fontSize: 14, height: 1.7),
+      pPadding: EdgeInsets.zero,
+      code: body.copyWith(
+        color: cs.onSurface,
+        backgroundColor: cs.surfaceContainerHighest,
+        fontFamily: 'monospace',
+        fontSize: bodySize * 0.85,
+      ),
+      h1: (tt.headlineSmall ?? const TextStyle(fontSize: 24))
+          .copyWith(color: cs.onSurface),
+      h1Padding: EdgeInsets.zero,
+      h2: (tt.titleLarge ?? const TextStyle(fontSize: 22))
+          .copyWith(color: cs.onSurface),
+      h2Padding: EdgeInsets.zero,
+      h3: (tt.titleMedium ?? const TextStyle(fontSize: 16))
+          .copyWith(color: cs.onSurface),
+      h3Padding: EdgeInsets.zero,
+      h4: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+          .copyWith(color: cs.primary),
+      h4Padding: EdgeInsets.zero,
+      h5: (tt.bodyLarge ?? const TextStyle(fontSize: 16))
+          .copyWith(color: cs.onSurface),
+      h5Padding: EdgeInsets.zero,
+      h6: (tt.bodyLarge ?? const TextStyle(fontSize: 16))
+          .copyWith(color: cs.onSurface),
+      h6Padding: EdgeInsets.zero,
+      em: const TextStyle(fontStyle: FontStyle.italic),
+      strong: const TextStyle(fontWeight: FontWeight.bold),
+      del: const TextStyle(decoration: TextDecoration.lineThrough),
+      blockquote:
+          body.copyWith(color: cs.onSurface, fontSize: 14, height: 1.7),
+      img: body.copyWith(color: cs.onSurface),
+      checkbox: body.copyWith(color: cs.primary),
+      blockSpacing: 8.0,
+      listIndent: 24.0,
+      listBullet: body.copyWith(color: cs.onSurface),
+      listBulletPadding: const EdgeInsets.only(right: 4),
+      tableHead: (tt.bodyMedium ?? body)
+          .copyWith(color: cs.onSurface, fontWeight: FontWeight.w600),
+      tableBody: body.copyWith(color: cs.onSurface),
+      tableHeadAlign: TextAlign.center,
+      tablePadding: const EdgeInsets.only(bottom: 4.0),
+      tableBorder: TableBorder.all(color: cs.outlineVariant),
+      tableColumnWidth: const FlexColumnWidth(),
+      tableCellsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      tableCellsDecoration: const BoxDecoration(),
+      blockquotePadding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+      blockquoteDecoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius:
+            const BorderRadius.horizontal(right: Radius.circular(4)),
+        border: Border(left: BorderSide(color: cs.primary, width: 3)),
+      ),
+      codeblockPadding: const EdgeInsets.all(8.0),
+      codeblockDecoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4.0),
+      ),
+      horizontalRuleDecoration: BoxDecoration(
+        border: Border(top: BorderSide(width: 1.0, color: cs.outlineVariant)),
+      ),
+    );
+  }
+
+  /// 便捷入口：从 [BuildContext] 取主题后构建样式表。
+  static MarkdownStyleSheet buildStyleSheet(BuildContext context) =>
+      styleSheetFor(Theme.of(context));
 }
 
 class _MarkdownDocScreenState extends State<MarkdownDocScreen> {
@@ -135,19 +224,7 @@ class _MarkdownDocScreenState extends State<MarkdownDocScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   selectable: true,
                   onTapLink: (text, href, title) => _onTapLink(href),
-                  styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                      .copyWith(
-                        p: const TextStyle(fontSize: 14, height: 1.7),
-                        h4: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: cs.primary,
-                        ),
-                        a: TextStyle(
-                          color: cs.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  styleSheet: MarkdownDocScreen.buildStyleSheet(context),
                 ),
               ),
               SafeArea(

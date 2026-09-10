@@ -12,6 +12,65 @@
 
 ---
 
+## [1.11.19+13] - 2026-09-10 — 深色模式正文修复 + 《黄帝内经》结构化条目检索
+
+**一句话**：重写 Markdown 样式表，所有颜色改读 ColorScheme，移除 flutter_markdown 硬编码的浅蓝引用块底色。
+
+**① 根因**（`lib/screens/markdown_doc_screen.dart`）
+- `MarkdownStyleSheet.fromTheme()` 把引用块底色硬编码为 `Colors.blue.shade100`（#BBDEFB），不随主题切换；深色模式下块内文字为 `onSurface`（近白 #F0DFD7），白字压浅蓝底对比度仅 **1.09:1**（WCAG AA 需 ≥4.5:1）。闭门课 7 篇正文通篇 `>` 引用块，整页几乎不可读。
+
+**② 修复**
+- 新增 `MarkdownDocScreen.styleSheetFor(ThemeData)` / `buildStyleSheet(BuildContext)`，样式表改为显式构造，颜色全部取自 `ColorScheme`。
+- 引用块底色 → `surfaceContainerHighest`（浅 #F0DFD7 / 深 #3D332D），蓝色块移除，改用 `primary` 左侧 3px 竖线做引用标识；文字显式 `onSurface` → 深色 **9.50:1**。
+- 行内代码/代码块底色 → `surfaceContainerHighest`（原为透明 / 与背景同色）；链接、h4 → `primary`；正文/标题/列表/表格 → `onSurface`；表格边框与分隔线 → `outlineVariant`。
+- 同类页面（内经、易经、命卦库）共用本组件，同步受益。
+
+**③ UI 细节**（`lib/screens/critical_illness_list_screen.dart`）
+- 列表项 chevron 图标补全 `onSurfaceVariant`；标签 Chip 文字显式 `onSurface`（底色为 primaryContainer 半透明叠加）。
+
+**④ 测试**（新增 `test/markdown_doc_contrast_test.dart`）
+- 按 WCAG 2.1 计算相对亮度与对比度，浅/深双主题逐元素断言（正文 ≥4.5，大号标题 ≥3），并断言引用块底色不再是 #BBDEFB。
+- 结果：5/5 通过；`flutter analyze` 0 error；全量 `flutter test` 445 通过 / 4 失败（紫微八字既有失败，经 git stash 隔离验证与本次无关）。
+
+**⑤ 修复：早晚子时 × 真太阳时下的农历与干支**（`lib/services/bazi_service.dart`、`lib/services/ziwei_engine.dart`）
+- 早子时（00:00–01:00）下八字 / 关煞屏农历落后一天：八字侧农历恒用原始公历日，与已取次日的日柱、与紫微屏不一致。现由 `_BaziChartBuild.earlyZi` 标记驱动，早子时农历基准日 +1 天。
+- 早晚子时判定顺序颠倒：原用**未校正**的 `solar.hour` 判早/晚子时，真太阳时校正发生在引擎内部之后，出现「先 +1 天、再被校正回前一天」→ 日柱差一天、时柱落到亥时。现改为先取校正后时刻再判定（八字 `TimePack.virtualTime`，紫微 `ZiweiDate.trueSolarTime`）。
+- 晚子时时柱原取自 `noSplit` 盘，而 `noSplit` 的换日判定基于原始 clockTime，真太阳时开启时只能拿到亥时。改为以「校正后次日 00:30、关闭二次校正」另排一盘取时柱。
+- 测试：新增 `test/zishi_solar_lunar_test.dart`（15 例，早子时农历两屏一致、E100 亥时 / E105 晚子时 / E140 早子时、晚子时与非子时回归），15/15 通过。
+- 说明：真太阳时单独开启且跨日时，农历仍按用户填写的日历日显示（沿用既有「农历不回拨」口径），与日柱可能不同日，属已知待拍板项。
+
+**⑥ 新增：《黄帝内经》结构化条目检索（解决「原文出处不清 / 维度不足」）**
+- 新增 `lib/data/neijing_entries.dart`：52 条 `NeijingEntry`、10 维度（`kNeijingDimensions`）。每一条强制四字段分离——`original`（《内经》原文引文）/ `source`（篇·节，可核查）/ `vernacular`（白话）/ `nishi`（倪师视角，非原文直引处一律标【推断】）。
+- 新增 `lib/screens/neijing_entries_screen.dart`：检索页支持六字段搜索（标题 / 原文 / 出处 / 白话 / 倪师 / 标签，词间「与」）、按篇名检索（如「热论」「灵枢」）、维度筛选、标签交叉「或」检索；卡片展开分字段显示，【推断】以 error 色高亮。
+- 入口挂在「黄帝内经·速查」页 AppBar（原脏象 / 望诊 / 脉诊三 Tab 未动）。全部颜色走 `ColorScheme`，深色模式无硬编码。
+- 测试：新增 `test/neijing_entries_screen_test.dart`（21 例，过滤逻辑 / 标签排序 / 高亮 / 页面交互 / 深色模式），21/21 通过；全量 `flutter test` 481 通过 / 4 失败（既有，无关）。
+
+---
+
+## [1.11.18+10] - 2026-09-07 — 三屏出生农历统一为「甲辰（2024）年正月初一」
+
+**一句话**：八字 / 关煞 / 紫微三屏出生农历统一为「干支年（公历年）年农历月日」，农历一律按日历日正午取，消除午夜跨日偏移。
+
+**① 农历格式统一**（`lib/services/bazi_service.dart` / `lib/services/ziwei_engine.dart`）
+- 新增 `_lunarYearGanZhi()`（`(year - 4) % 60` 推干支），格式化为 `甲辰（2024）年正月初一`：`干支年（公历年）年 + 农历月名 + 月 + 农历日名`。
+- 注意 `LunarDate.monthNameStr` 只给「正 / 五 / 闰七」不含「月」、`dayName` 只给「初一 / 三十」不含「日」，格式串需自行补齐。
+- 两套字段须同步：`BaZiPaipan.lunarText`（八字 + 关煞屏）与 `ZiweiChart.lunarText`（紫微屏）。
+
+**② 农历取数口径修正**（`lib/services/ziwei_engine.dart`）
+- 紫微主分支与早子时分支改走 `LunarDate.fromSolar(AstroDateTime(y, m, d, 12, 0, 0))` 日历日正午口径。
+- 修复：原本用 `ZiweiDate.lunar`（含真太阳时），午夜出生会把农历回拨一天（2023-01-22 显示成「壬寅年腊月三十」，应为「癸卯年正月初一」）。
+- 早子时分支同步改用次日正午取农历，公历 +1 与农历 +1 保持一致。
+
+**③ UI 调整**（`lib/screens/ziwei_chart_screen.dart`）
+- 紫微屏「出生农历」「出生农历月」（标闰月）两行整体上移到「八字」行上方，四柱显示在农历下方；八字屏 / 关煞屏农历行同样位于四柱之上。
+
+**④ 测试**（`test/lunar_birth_date_test.dart`，新增）
+- 三锚点断言（2024-02-10 → 甲辰（2024）年正月初一、2023-01-22 → 癸卯（2023）年正月初一、2024-06-10 → 甲辰（2024）年五月初五）。
+- 时辰无关性组：3 锚点 × 5 时辰 × 早晚子时开关；新增紫微 `ZiweiChart.lunarText` 断言组。
+- 结果：11/11 通过；`flutter analyze` 0 问题。
+
+---
+
 ## [1.11.17+9] - 2026-09-06 — 早晚子时校正约束落地（原始时间只读 + 农历跟随校正干支）
 
 **一句话**：紫微排盘早晚子时校正重构，原始出生时间只读、农历显示跟随校正后的干支。
