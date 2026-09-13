@@ -60,10 +60,12 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
   int _year = 1995;
   int _month = 8;
   int _day = 16;
-  int _shiChenIndex = 5;
+  int _birthHour = 10; // 出生小时（0-23），默认巳时约 10:00
+  int _birthMinute = 0; // 出生分钟（0-59）
   bool _isMale = true;
   bool _fireEarthSame = true; // 长生十二神口径：火土同宫(默认) / 水土同宫
   bool _distinguishZiShi = false; // 区分早晚子时开关（默认关：子时归自然日；开启按 23:00/00:00 精确区分）
+  bool _useTrueSolarTime = true; // 真太阳时校准开关（默认开，与紫微页同口径）
   String? _locName; // 出生地点（真太阳时校正；null=未设置→引擎默认东经120°）
   double? _locLng;
   double? _locLat;
@@ -78,6 +80,7 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
     // 同步共享排盘设置（与设置页双向一致）
     _fireEarthSame = SettingsRepository.instance.fireEarthSame;
     _distinguishZiShi = SettingsRepository.instance.distinguishZiShiEnabled;
+    _useTrueSolarTime = SettingsRepository.instance.useTrueSolarTime;
     _locName = SettingsRepository.instance.lastCityName;
     _locLng = SettingsRepository.instance.lastLng;
     _locLat = SettingsRepository.instance.lastLat;
@@ -88,9 +91,9 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
       _year = s.year;
       _month = s.month;
       _day = s.day;
-      // 时辰块归入：子=23,0；丑=1,2；寅=3,4……与 shiChenIndexOf 同口径，
-      // 输入粒度为时辰块起始小时（0/2/…/22）。
-      _shiChenIndex = ((s.hour + 1) ~/ 2) % 12;
+      // 出生时刻回填（精确到时+分；时辰名由 _birthHour 推导展示）。
+      _birthHour = s.hour;
+      _birthMinute = s.minute;
       _isMale = widget.initialIsMale ?? _isMale;
       _locName = widget.initialCityName ?? _locName;
       _locLng = widget.initialLng ?? _locLng;
@@ -99,20 +102,26 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
     }
   }
 
+  /// 由出生小时（0-23）推导时辰索引。
+  /// 时辰时段（标准晚子时口径）：子(23,0) 丑(1,2) 寅(3,4) 卯(5,6) 辰(7,8)
+  /// 巳(9,10) 午(11,12) 未(13,14) 申(15,16) 酉(17,18) 戌(19,20) 亥(21,22)。
+  /// 注：23 点（晚子时）归「子时」，公历日期是否滚动到次日由引擎按
+  /// ratHourMode 决定，这里只负责时辰归类。
+  int _shiChenIndexOfHour(int hour) => ((hour.clamp(0, 23) + 1) ~/ 2) % 12;
+
   void _compute() {
     setState(() {
       _result = null;
       _error = null;
     });
     try {
-      final hour = _shiChen[_shiChenIndex].$2;
-      final solar = DateTime(_year, _month, _day, hour, 0);
+      final solar = DateTime(_year, _month, _day, _birthHour, _birthMinute);
       final location =
           (_locLng != null) ? Location(_locLng!, _locLat ?? 30) : null;
       final r = computeBaZiPaipan(
         solar,
         isMale: _isMale,
-        useTrueSolarTime: true,
+        useTrueSolarTime: _useTrueSolarTime,
         twelveStageMode: _fireEarthSame
             ? TwelveStageMode.fireEarthSame
             : TwelveStageMode.waterEarthSame,
@@ -127,6 +136,7 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
           isMale: _isMale,
           location: location,
           ratHourMode: _distinguishZiShi,
+          useTrueSolarTime: _useTrueSolarTime,
         );
       });
     } catch (e) {
@@ -173,41 +183,14 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
   /// 回看时由紫微排盘页统一重排。
   Future<void> _saveToLibrary() async {
     if (_result == null) return;
-    final hour = _shiChen[_shiChenIndex].$2;
-    // 原始公历生辰（含时辰块代表小时）；子时校正交由引擎按 ratHourMode 处理。
-    final solar = DateTime(_year, _month, _day, hour, 0);
+    // 原始公历生辰（含出生时/分）；子时校正交由引擎按 ratHourMode 处理。
+    final solar = DateTime(_year, _month, _day, _birthHour, _birthMinute);
     final genderLabel = _isMale ? '男' : '女';
     final defaultName =
         '命盘 $_year-${_month.toString().padLeft(2, '0')}-${_day.toString().padLeft(2, '0')} $genderLabel';
-    final nameCtrl = TextEditingController(text: defaultName);
-
     final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('添加到命盘库'),
-        content: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-            labelText: '命盘名称',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final v = nameCtrl.text.trim();
-              Navigator.pop(ctx, v.isEmpty ? defaultName : v);
-            },
-            child: const Text('保存'),
-          ),
-        ],
-      ),
+      builder: (_) => _SaveNameDialog(defaultName: defaultName),
     );
     if (name == null) return;
 
@@ -283,12 +266,12 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
             lat: _locLat,
             onSelected: (city) {
               setState(() {
-                _locName = city.name;
+                _locName = city.label;
                 _locLng = city.lng;
                 _locLat = city.lat;
               });
               SettingsRepository.instance
-                  .setLastLocation(city.name, city.lng, city.lat);
+                  .setLastLocation(city.label, city.lng, city.lat);
               if (_result != null) _compute(); // 地点变更后重排
             },
           ),
@@ -355,6 +338,7 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
   }
 
   Widget _buildInputCard(ColorScheme cs) {
+    final shiChenIndex = _shiChenIndexOfHour(_birthHour);
     return Card(
       elevation: 2,
       child: Padding(
@@ -417,19 +401,65 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
               children: [
                 Expanded(
                   flex: 2,
-                  child: _Dropdown(
-                    label: '时辰',
-                    value: _shiChenIndex,
-                    items: [
-                      for (int i = 0; i < _shiChen.length; i++)
-                        DropdownMenuItem(
-                          value: i,
-                          child: Text(
-                            '${_shiChen[i].$1} (${_shiChen[i].$3})',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _Dropdown(
+                              label: '时',
+                              value: _birthHour,
+                              items: [
+                                for (int h = 0; h <= 23; h++)
+                                  DropdownMenuItem(
+                                    value: h,
+                                    child: Text(
+                                      h == 23
+                                          ? (_distinguishZiShi
+                                              ? '23(晚子时)'
+                                              : '23(子时)')
+                                          : '$h',
+                                    ),
+                                  ),
+                              ],
+                              onChanged: (v) =>
+                                  setState(() => _birthHour = v!),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: _Dropdown(
+                              label: '分',
+                              value: _birthMinute,
+                              items: [
+                                for (int m = 0; m <= 59; m++)
+                                  DropdownMenuItem(
+                                    value: m,
+                                    child:
+                                        Text(m.toString().padLeft(2, '0')),
+                                  ),
+                              ],
+                              onChanged: (v) =>
+                                  setState(() => _birthMinute = v!),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _chip(
+                            '时辰',
+                            '${_shiChen[shiChenIndex].$1} '
+                            '(${_shiChen[shiChenIndex].$3})',
+                            cs.primary,
+                          ),
+                        ],
+                      ),
                     ],
-                    onChanged: (v) => setState(() => _shiChenIndex = v!),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -475,13 +505,31 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
               subtitle: Text(
                 '默认关闭：子时归自然日（日柱当天、时柱当日子时）。'
                 '开启后 23:00–24:00 算晚子时（日柱当天、时柱次日子时），'
-                '00:00–01:00 算早子时（日柱次日）。仅影响子时生人。',
+                '00:00–01:00 算早子时（属当日子时、日柱当天）。仅影响子时生人。',
                 style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
               ),
               value: _distinguishZiShi,
               onChanged: (v) {
                 setState(() => _distinguishZiShi = v);
                 SettingsRepository.instance.setDistinguishZiShiEnabled(v);
+              },
+            ),
+            const SizedBox(height: 4),
+            SwitchListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: const Text(
+                '真太阳时校准',
+                style: TextStyle(fontSize: 12),
+              ),
+              subtitle: Text(
+                '按出生地经度校正平太阳时时差，专业排盘默认开启',
+                style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+              ),
+              value: _useTrueSolarTime,
+              onChanged: (v) {
+                setState(() => _useTrueSolarTime = v);
+                SettingsRepository.instance.setUseTrueSolarTime(v);
               },
             ),
             const SizedBox(height: 4),
@@ -501,6 +549,86 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
           ],
         ),
       ),
+    );
+  }
+  /// 圆角小标签：用于展示由出生时刻推导的时辰名（与紫微排盘页同口径）。
+  Widget _chip(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(fontSize: 12),
+          children: [
+            TextSpan(
+              text: '$label ',
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            TextSpan(
+              text: value,
+              style: TextStyle(fontWeight: FontWeight.bold, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 「添加到命盘库」名称输入弹窗。
+///
+/// [TextEditingController] 由本 State 持有并在 [State.dispose] 中销毁——
+/// 该 dispose 晚于路由退场动画，避免退场期间误用已销毁的 controller。
+/// 用户输入的名字通过 `Navigator.pop(context, name)` 原样返回给调用方。
+class _SaveNameDialog extends StatefulWidget {
+  final String defaultName;
+
+  const _SaveNameDialog({required this.defaultName});
+
+  @override
+  State<_SaveNameDialog> createState() => _SaveNameDialogState();
+}
+
+class _SaveNameDialogState extends State<_SaveNameDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.defaultName);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('添加到命盘库'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(
+          labelText: '命盘名称',
+          border: OutlineInputBorder(),
+        ),
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final v = _controller.text.trim();
+            Navigator.pop(context, v.isEmpty ? widget.defaultName : v);
+          },
+          child: const Text('保存'),
+        ),
+      ],
     );
   }
 }

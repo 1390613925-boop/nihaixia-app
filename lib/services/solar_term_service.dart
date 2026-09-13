@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart';
 
@@ -175,12 +176,17 @@ Map<String, SolarTermKnowledge>? _knowledgeCache;
 /// 加载并缓存 24 节气养生知识（幂等，可重复调用）。
 Future<Map<String, SolarTermKnowledge>> _loadKnowledge() async {
   if (_knowledgeCache != null) return _knowledgeCache!;
-  final raw =
-      await rootBundle.loadString('assets/data/solar_term_knowledge.json');
-  final list = (jsonDecode(raw) as List<dynamic>)
-      .map((e) => SolarTermKnowledge.fromJson(e as Map<String, dynamic>))
-      .toList();
-  _knowledgeCache = {for (final k in list) k.term: k};
+  try {
+    final raw =
+        await rootBundle.loadString('assets/data/solar_term_knowledge.json');
+    final list = (jsonDecode(raw) as List<dynamic>)
+        .map((e) => SolarTermKnowledge.fromJson(e as Map<String, dynamic>))
+        .toList();
+    _knowledgeCache = {for (final k in list) k.term: k};
+  } catch (e, st) {
+    debugPrint('[SolarTermService] 加载 solar_term_knowledge.json 失败，降级为空：$e\n$st');
+    _knowledgeCache = const {};
+  }
   return _knowledgeCache!;
 }
 

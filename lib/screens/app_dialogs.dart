@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -325,7 +324,7 @@ Future<void> showAboutPage(BuildContext context) async {
             if (entries.isEmpty)
               Text('暂无更新记录', style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12))
             else
-              ...entries.map((e) => _buildChangelogEntry(context, e)).toList(),
+              ...entries.map((e) => _buildChangelogEntry(context, e)),
             const SizedBox(height: 16),
             const Text('致谢', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -487,8 +486,10 @@ Future<void> downloadAndInstall(BuildContext context, UpdateInfo info) async {
       builder: (context, setDialogState) {
         UpdateService.downloadApk(info.apkDownloadUrl, (p) {
           setDialogState(() => progress = p);
-        }).then((file) {
-          if (context.mounted) Navigator.pop(context);
+        }, expectedSize: info.apkSize, expectedSha256: info.apkSha256)
+            .then((file) {
+          if (!context.mounted) return;
+          Navigator.pop(context);
           if (file != null) {
             installApk(file, context);
           } else {

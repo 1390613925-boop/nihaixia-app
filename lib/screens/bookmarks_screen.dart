@@ -16,12 +16,80 @@ class BookmarksScreen extends StatefulWidget {
   State<BookmarksScreen> createState() => _BookmarksScreenState();
 }
 
+/// 「新建文件夹」弹窗。
+///
+/// [TextEditingController] 由本 State 持有，并在 [State.dispose] 中销毁——
+/// 该 dispose 晚于路由退场动画，避免退场期间（如软键盘收起触发重建）误用已销毁的 controller。
+class _CreateFolderDialog extends StatefulWidget {
+  /// 文件夹创建成功后回调（宿主据此刷新列表）。
+  final VoidCallback onCreated;
+
+  const _CreateFolderDialog({required this.onCreated});
+
+  @override
+  State<_CreateFolderDialog> createState() => _CreateFolderDialogState();
+}
+
+class _CreateFolderDialogState extends State<_CreateFolderDialog> {
+  final TextEditingController _controller = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty || _submitting) return;
+    _submitting = true;
+    final nav = Navigator.of(context);
+    try {
+      await DatabaseHelper.instance.insertFolder(name);
+    } catch (e, st) {
+      // 捕获而非外抛：onPressed: _submit 未 await，异常外逃会成为「未捕获异步报错」。
+      debugPrint('[Bookmarks] 新建文件夹失败：$e\n$st');
+    } finally {
+      // 无论成功或异常都关闭弹窗，避免失败时弹窗卡死无法操作。
+      if (mounted) {
+        nav.pop();
+        widget.onCreated();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('新建文件夹'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(
+          hintText: '输入文件夹名称',
+          border: OutlineInputBorder(),
+        ),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('创建'),
+        ),
+      ],
+    );
+  }
+}
+
 class _BookmarksScreenState extends State<BookmarksScreen> {
   List<Bookmark> _bookmarks = [];
   List<Map<String, dynamic>> _folders = [];
   String? _selectedCategory;
   int? _selectedFolderId;
-  String _viewMode = 'all'; // all | folder
 
   @override
   void initState() {
@@ -55,6 +123,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     } else {
       bookmarks = await db.getAllBookmarks();
     }
+    if (!mounted) return;
     setState(() {
       _folders = folders;
       _bookmarks = bookmarks;
@@ -106,37 +175,10 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
   // ==================== 文件夹管理 ====================
 
-  void _showCreateFolderDialog() {
-    final controller = TextEditingController();
-    showDialog(
+  Future<void> _showCreateFolderDialog() async {
+    await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('新建文件夹'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: '输入文件夹名称',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (controller.text.trim().isNotEmpty) {
-                await DatabaseHelper.instance.insertFolder(controller.text.trim());
-                Navigator.pop(ctx);
-                _loadData();
-              }
-            },
-            child: const Text('创建'),
-          ),
-        ],
-      ),
+      builder: (_) => _CreateFolderDialog(onCreated: _loadData),
     );
   }
 
@@ -153,8 +195,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final nav = Navigator.of(ctx);
               await DatabaseHelper.instance.deleteFolder(folderId);
-              Navigator.pop(ctx);
+              nav.pop();
               if (_selectedFolderId == folderId) {
                 _selectedFolderId = null;
               }
@@ -182,8 +225,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               leading: const Icon(Icons.folder_off),
               title: const Text('移出文件夹'),
               onTap: () async {
+                final nav = Navigator.of(ctx);
                 await DatabaseHelper.instance.moveBookmarkToFolder(bookmark.id!, null);
-                Navigator.pop(ctx);
+                nav.pop();
                 _loadData();
               },
             ),
@@ -191,9 +235,10 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                   leading: const Icon(Icons.folder),
                   title: Text(f['name']),
                   onTap: () async {
+                    final nav = Navigator.of(ctx);
                     await DatabaseHelper.instance.moveBookmarkToFolder(
                         bookmark.id!, f['id']);
-                    Navigator.pop(ctx);
+                    nav.pop();
                     _loadData();
                   },
                 )),
@@ -276,7 +321,6 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                       onSelected: (_) {
                         setState(() {
                           _selectedFolderId = null;
-                          _viewMode = 'all';
                         });
                         _loadData();
                       },
@@ -294,7 +338,6 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                             onSelected: (_) {
                               setState(() {
                                 _selectedFolderId = f['id'];
-                                _viewMode = 'folder';
                               });
                               _loadData();
                             },
@@ -363,7 +406,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                           ),
                           subtitle: Text(
                             b.content.length > 80
-                                ? b.content.substring(0, 80) + '...'
+                                ? '${b.content.substring(0, 80)}...'
                                 : b.content,
                             style: const TextStyle(fontSize: 12),
                             maxLines: 2,

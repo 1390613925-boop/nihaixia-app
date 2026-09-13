@@ -12,6 +12,70 @@
 
 ---
 
+## [1.11.22+16] - 2026-09-13 — 黄历神诞检索入口 + 周公解梦记梦/玉匣灵兆身兆记录
+
+**一句话**：黄历右上角新增「农历节日·神诞」检索入口；周公解梦新增「记梦」、玉匣灵兆新增「记录身体征兆」，均复用既有收藏体系落地。
+
+**① 黄历神诞检索入口**（`lib/screens/festival_lookup_screen.dart` + `lib/screens/daily_almanac_screen.dart`）
+- 每日黄历右上角新增 🎏 入口，进入「农历节日·神诞」表（玉匣记神仙圣诞 + 潮汕节俗 + 斋期，共 219 条），支持关键词搜索、农历+公历双显。
+- 复用既有数据层，零新依赖、零新资产，APK 体积不变。
+
+**② 周公解梦·记梦**（`lib/screens/dream_screen.dart`）
+- 右上角 📝 入口弹出记梦面板，写入一条 `Bookmark(category:'记梦')`。
+
+**③ 玉匣灵兆·身兆记录**（`lib/screens/yuxiaji_omen_screen.dart`）
+- 右上角 ⚠️ 入口弹出记录面板，写入 `Bookmark(category:'身兆记录')`，source 自动带当前时辰。
+
+**④ 复用既有收藏体系**（无新表/迁移）
+- 记梦/身兆记录直接复用 `Bookmark` 模型 + `bookmarks` 表，无需新建表或数据库迁移。
+- `insertBookmark` 触发 `bookmarkVersion` 通知 → 收藏页按 category 自动归类显示，支持删除/移文件夹/导出。
+
+**⑤ 验证**
+- `flutter analyze lib/screens/festival_lookup_screen.dart lib/screens/dream_screen.dart lib/screens/yuxiaji_omen_screen.dart` 0 error。
+- 新增 `test/festival_lookup_test.dart`（4 例：双源合并升序、搜「妈祖」命中、公历可逆回推、越界入参返回 null）全过。
+
+## [1.11.21+15] - 2026-09-12 — 工具箱中医/玄学区划分 + 中文日期选择器修复
+
+**一句话**：「工具箱」18 项按主题拆分为「中医区 / 玄学区 / 通用区」三块带配色分区头，顺序固定为 中医区 → 玄学区 → 设置；并修复 app 内全部日期选择器此前回退英文的问题。
+
+**① 工具箱分区重构**（`lib/screens/tools_screen.dart` + `lib/widgets/zone_section.dart` + `lib/theme/app_colors.dart`）
+- 新增 `ZoneSection` 组件（`enum Zone{general,tcm,metaphysics}`）：彩色标题 + 着色背景（暖褐=中医 / 冷紫=玄学 / primary=通用），分区边界一眼可辨。
+- `AppColors` 新增 `tcmZone` / `metaphysicsZone` 双主题色 token（light/dark/copyWith/lerp 全补）。
+- 18 张 `_ToolCard` 原样保留，扁平 ListView 重构为 3 个 `ZoneSection`：中医区(6) + 玄学区(11) + 通用区(1=设置)。顺序固定 中医区 → 玄学区 → 设置（通用区置底）。
+
+**② 修复：日期选择器英文**（`lib/main.dart` + `pubspec.yaml`）
+- 根因：`MaterialApp` 未配 `localizationsDelegates`/`supportedLocales`/`locale`，且 `pubspec.yaml` 缺 `flutter_localizations` → 8 处 `showDatePicker`（生辰/黄历/称骨等）回退英文年月日与 OK/CANCEL。
+- 修复：`pubspec.yaml` 加 `flutter_localizations: sdk: flutter`；`MaterialApp` 加对应 delegates + `supportedLocales(zh_CN/en_US)` + 强制 `locale: zh_CN`。8 处调用点继承 app 上下文，无需逐改。
+
+**③ 验证**
+- `flutter analyze lib/screens/tools_screen.dart lib/main.dart` 0 error；分区重构与本地化修复零引擎/路由改动。
+
+---
+
+## [1.11.20+14] - 2026-09-10 — 工具箱新增三大民俗命理功能（袁天罡称骨 / 受生债查询 / 轩辕黄帝四季歌）
+
+**一句话**：「工具箱」新增「民俗文化参考」专区，入驻袁天罡称骨算命、受生债查询、轩辕黄帝四季歌三项功能，均附「民俗文化参考 · 非医学诊断」免责声明，零新增依赖。
+
+**① 新增：工具箱民俗命理专区**（`lib/screens/tools_screen.dart`）
+- 新增「民俗文化参考」分组，集中放置三项命理功能入口，与既有医疗诊断工具分区明确，避免误作医疗建议。
+- 三项功能均内置免责声明卡：明确标注「民俗文化参考，不构成医学诊断或治疗建议」。
+
+**② 袁天罡称骨算命**（`lib/screens/chenggu_bone_screen.dart` + `lib/data/chenggu_data.dart`）
+- 按出生年/月/日/时对照称骨歌诀，累加骨重得总重，查表得出命格批语。
+- 年/月/日/时骨重数据内置，UI 分步选择 + 实时骨重汇总。
+
+**③ 受生债查询**（`lib/screens/shousheng_debt_screen.dart` + `lib/data/shousheng_data.dart`）
+- 按出生年天干 + 生肖，查表得出「受生债」对应库官、数目与纳音，附民俗文化背景说明。
+
+**④ 轩辕黄帝四季歌**（`lib/screens/huangdi_siji_screen.dart` + `lib/data/huangdi_siji_data.dart`）
+- 四季养生歌诀浏览 + 按节气/季节检索；配图替换为 983×983 无水印干净图（原 1600×1520 裁剪去水印图退役）。
+- `flutter analyze` 三文件 0 error；图资体积由 381KB 降至 175KB。
+
+**⑤ 验证**
+- 新增三屏 + 工具箱入口，`flutter analyze` 0 新增 error；三项功能零新增依赖。
+
+---
+
 ## [1.11.19+13] - 2026-09-10 — 深色模式正文修复 + 《黄帝内经》结构化条目检索
 
 **一句话**：重写 Markdown 样式表，所有颜色改读 ColorScheme，移除 flutter_markdown 硬编码的浅蓝引用块底色。

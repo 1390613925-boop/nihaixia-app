@@ -69,7 +69,7 @@ class MeridianDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${meridian}病',
+                              '$meridian病',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

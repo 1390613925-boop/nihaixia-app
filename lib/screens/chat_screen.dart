@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../engine/diagnostic_engine.dart';
-import '../engine/formula_rules.dart';
-import '../engine/rule_engine.dart';
 import '../engine/diagnostic_rules.dart';
 import '../engine/meridian_formula_types.dart';
 import '../data/formula_repository.dart';
@@ -70,23 +68,6 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _selectedTongueCoating;
   String? _selectedTongueShape;
   String? _selectedPulse;
-
-  // ==================== 扁平 Q1–Q12 流程状态 ====================
-  int _flatIndex = 0;
-  final Map<String, String> _qTitles = {
-    kQ1: 'Q1 寒热感觉（必答）：你整体的寒热感觉是怎样的？',
-    kQ2: 'Q2 脉象（可跳）：你会摸脉吗？不会就选「不清楚」。',
-    kQ3: 'Q3 渴饮（必答）：你口渴吗？想喝什么水温？',
-    kQ4: 'Q4 汗出：你平时容易出汗吗？什么情况下出汗？',
-    kQ5: 'Q5 疼痛/不适：你哪里痛或不适？（选最贴切的一项）',
-    kQ6: 'Q6 大便：你的大便情况？',
-    kQ7: 'Q7 小便：小便情况？',
-    kQ8: 'Q8 胃口：你的胃口怎样？',
-    kQ9: 'Q9 睡眠：你的睡眠怎样？',
-    kQ10: 'Q10 精神：你的精神状态？',
-    kQ11: 'Q11 月经/性功能（可跳过）：选「没有此症状」即跳过。',
-    kQ12: 'Q12 呕吐类型：你呕吐/恶心的情况？',
-  };
 
   @override
   void initState() {
@@ -529,7 +510,7 @@ class _ChatScreenState extends State<ChatScreen> {
       resultText += '未提供脉象信息，本次结论仅供参考\n';
     }
 
-    resultText += '\n${result.patternDetail}\n\n${explanation}';
+    resultText += '\n${result.patternDetail}\n\n$explanation';
 
     // P1-3: 推理链（简单/详细模式均显示）
     final reasoning = result.matchedSymptoms.isNotEmpty
@@ -794,7 +775,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // ==================== 导航 ====================
 
-  void _openFormulaDetail(formula) {
+  void _openFormulaDetail(Formula formula) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -952,6 +933,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 

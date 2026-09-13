@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/formula_oral_hint.dart';
 
@@ -13,14 +14,19 @@ class FormulaOralHintRepository {
   /// （沿用 FormulaRepository 的写法，规避 `late final` 竞态坑）。
   static Future<void> load() async {
     if (_hints != null) return;
-    final jsonStr =
-        await rootBundle.loadString('assets/data/formula_oral_hints.json');
-    final data = json.decode(jsonStr) as Map<String, dynamic>;
-    final raw = data['hints'] as Map<String, dynamic>? ?? {};
-    _hints = raw.map(
-      (id, value) =>
-          MapEntry(id, FormulaOralHint.fromJson(id, value as Map<String, dynamic>)),
-    );
+    try {
+      final jsonStr =
+          await rootBundle.loadString('assets/data/formula_oral_hints.json');
+      final data = json.decode(jsonStr) as Map<String, dynamic>;
+      final raw = data['hints'] as Map<String, dynamic>? ?? {};
+      _hints = raw.map(
+        (id, value) => MapEntry(
+            id, FormulaOralHint.fromJson(id, value as Map<String, dynamic>)),
+      );
+    } catch (e, st) {
+      debugPrint('[FormulaOralHintRepository] 加载 formula_oral_hints.json 失败，降级为空：$e\n$st');
+      _hints = const {};
+    }
   }
 
   /// 按方剂 id 取语料；未加载或无该方剂时返回 null。

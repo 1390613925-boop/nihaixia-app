@@ -6,20 +6,26 @@
 //      方向 = 年干阴阳 × 性别（bazi_core fortune.dart:125-126）；
 //   3. FortuneTable 冒烟：8 步大运 + 按公历年检索流年。
 //
-// 两库显式传同一 Location(120,30)、ratHourMode 默认 noSplit（23 点换日），
-// 真太阳时均开启——任何一侧口径变化都会在这里报警。
+// 两库显式传同一 Location(120,30)；参考侧 _bc 用 todayGan（与 computeBaZiPaipan
+// 底层一致，见下方 _bc 注释），真太阳时均开启——任何一侧口径变化都会在这里报警。
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bazi_core/bazi_core.dart';
+import 'package:ziwei_core/ziwei_core.dart' show RatHourMode;
 import 'package:sxwnl_spa_dart/sxwnl_spa_dart.dart' show Location;
 
 import 'package:nihaisha_app/services/bazi_service.dart';
 
 final _loc = Location(120, 30);
 
+// 参考库 _bc 与 computeBaZiPaipan 必须同口径：app 内部「八字屏 / 紫微屏」统一以
+// todayGan（子时归自然日）为底层排盘基准（见 ziwei_engine.dart:429 注释——noSplit 会把
+// 23–24 点整体顺延到次日，盘式全错），故此处显式传 todayGan，使参考侧与待验侧口径一致。
+// 否则 23:30 这类晚子时边界会因 noSplit（次日日柱）与 todayGan（当日日柱）天然差一天而误报。
 BaziChart _bc(DateTime t, Gender g) => BaziChart.createBySolarDate(
       clockTime: AstroDateTime(t.year, t.month, t.day, t.hour, t.minute),
       location: _loc,
+      ratHourMode: RatHourMode.todayGan,
       gender: g,
     );
 

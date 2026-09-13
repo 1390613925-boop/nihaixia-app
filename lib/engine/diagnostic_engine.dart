@@ -1179,7 +1179,7 @@ class DiagnosticEngine {
     }
 
     // 检查预设的矛盾组合
-    final key = '${_pulseType}脉+${_tongueCoating}苔';
+    final key = '$_pulseType脉+$_tongueCoating苔';
     final contradiction = DiagnosticRules.pulseTongueContradictions[key];
     if (contradiction != null) {
       return '${contradiction['warning']}\n${contradiction['suggestion']}';
@@ -1443,8 +1443,6 @@ class DiagnosticEngine {
         return null;
     }
 
-    if (result == null) return null;
-
     // 厥阴血虚寒凝纠偏（当归四逆汤）：十问阶段因"脉细/微"被误归少阴，
     // 若跟进或十问存在手足厥冷/脉细欲绝，且脉为细/微/弦细/沉细、无但欲寐、无小便清长，
     // 则当属厥阴血虚寒厥（当归四逆汤），非少阴阳衰（四逆汤）。
@@ -1454,10 +1452,8 @@ class DiagnosticEngine {
          _pulseType == '弦细' || _pulseType == '沉细') &&
         _answers['drowsy'] != true && _answers['urine_clear'] != true) {
       final jueyinResult = _diagnoseJueYin(_answers);
-      if (jueyinResult != null) {
-        result = jueyinResult;
-        meridian = '厥阴';
-      }
+      result = jueyinResult;
+      meridian = '厥阴';
     }
 
     // 计算权重置信度

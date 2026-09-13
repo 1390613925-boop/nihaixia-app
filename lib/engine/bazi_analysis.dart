@@ -223,11 +223,15 @@ BaZiAnalysis analyzeBaZi({
   for (var i = 0; i < 4; i++) {
     if (zhiIdx[i] == jiangTarget) addShensha('将星', i, _zhiChars[jiangTarget]);
   }
-  // 天德（月支 → 查四干）
-  final tdStem = _tianDe[zhiIdx[1]];
-  if (tdStem != null) {
+  // 天德（月支 → 查四柱）。注意：值可能是天干，也可能是地支——卯月见申、
+  // 午月见亥、酉月见寅、子月见巳（四仲月），必须按支查，否则这 4 个月永不触发。
+  final tdChar = _tianDe[zhiIdx[1]];
+  if (tdChar != null) {
+    final tdIsStem = _ganChars.contains(tdChar);
     for (var i = 0; i < 4; i++) {
-      if (gans[i] == tdStem) addShensha('天德', i, tdStem);
+      if (tdIsStem ? (gans[i] == tdChar) : (zhis[i] == tdChar)) {
+        addShensha('天德', i, tdChar);
+      }
     }
   }
   // 月德（月支 → 查四干）
@@ -288,6 +292,7 @@ BaZiAnalysis analyzeBaZi({
   addBranchShensha('寡宿', guaSu[zhiIdx[0]]);
   // 劫煞 / 亡神（年支三合组：劫煞取绝位，亡神取临官位）
   const jieShaByGroup = [5, 8, 11, 2];
+  // 亡神：三合局临官位（申子辰→亥、亥卯未→寅、寅午戌→巳、巳酉丑→申）
   const wangShenByGroup = [11, 2, 5, 8];
   final yearGroup = _sanHeGroup(zhiIdx[0]);
   addBranchShensha('劫煞', jieShaByGroup[yearGroup]);

@@ -68,6 +68,13 @@ class _CitySearchDialog extends StatefulWidget {
 
 class _CitySearchDialogState extends State<_CitySearchDialog> {
   List<CityLocation> _results = const [];
+  bool _domestic = true; // true=国内，false=国外；默认国内，不持久化
+  bool _loading = false;
+  String _query = '';
+  int _reqToken = 0; // 丢弃过期（乱序到达）的搜索结果
+
+  PlaceScope get _scope =>
+      _domestic ? PlaceScope.domestic : PlaceScope.world;
 
   @override
   void initState() {
@@ -76,10 +83,15 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
   }
 
   Future<void> _search(String q) async {
-    await CityLocationService.load();
-    if (!mounted) return;
+    _query = q;
+    final scope = _scope;
+    final token = ++_reqToken;
+    setState(() => _loading = true);
+    final list = await CityLocationService.load(scope);
+    if (!mounted || token != _reqToken) return; // 已切换 scope / 已关闭：丢弃过期结果
     setState(() {
-      _results = CityLocationService.search(q, 60);
+      _results = CityLocationService.searchIn(list, q, 60);
+      _loading = false;
     });
   }
 
@@ -92,10 +104,22 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: true, label: Text('国内')),
+                ButtonSegment(value: false, label: Text('国外')),
+              ],
+              selected: {_domestic},
+              onSelectionChanged: (s) {
+                setState(() => _domestic = s.first);
+                _search(_query); // 切换后按当前关键字重新搜索
+              },
+            ),
+            const SizedBox(height: 8),
             TextField(
               autofocus: true,
               decoration: const InputDecoration(
-                hintText: '中文搜索城市 / 省份',
+                hintText: '中文 / 英文搜索城市 / 省份',
                 prefixIcon: Icon(Icons.search),
                 isDense: true,
               ),
@@ -103,22 +127,28 @@ class _CitySearchDialogState extends State<_CitySearchDialog> {
             ),
             const SizedBox(height: 8),
             Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _results.length,
-                itemBuilder: (context, i) {
-                  final c = _results[i];
-                  return ListTile(
-                    dense: true,
-                    title: Text(c.displayName, style: const TextStyle(fontSize: 14)),
-                    subtitle: Text(
-                      '${c.lng.toStringAsFixed(1)}°E, ${c.lat.toStringAsFixed(1)}°N',
-                      style: const TextStyle(fontSize: 11),
+              child: _loading
+                  ? const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _results.length,
+                      itemBuilder: (context, i) {
+                        final c = _results[i];
+                        return ListTile(
+                          dense: true,
+                          title: Text(c.displayName,
+                              style: const TextStyle(fontSize: 14)),
+                          subtitle: Text(
+                            '${c.lng.toStringAsFixed(1)}°E, ${c.lat.toStringAsFixed(1)}°N',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          onTap: () => Navigator.pop(context, c),
+                        );
+                      },
                     ),
-                    onTap: () => Navigator.pop(context, c),
-                  );
-                },
-              ),
             ),
           ],
         ),

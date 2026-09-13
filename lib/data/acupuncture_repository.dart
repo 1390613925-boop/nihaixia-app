@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/acupuncture.dart';
 
@@ -9,20 +10,26 @@ class AcupunctureRepository {
 
   static Future<void> load() async {
     if (_loaded) return;
-    final jsonStr = await rootBundle.loadString('assets/data/acupuncture.json');
-    final data = json.decode(jsonStr) as Map<String, dynamic>;
+    try {
+      final jsonStr = await rootBundle.loadString('assets/data/acupuncture.json');
+      final data = json.decode(jsonStr) as Map<String, dynamic>;
 
-    final acupunctureData = data['acupuncture'] as Map<String, dynamic>;
-    final categoriesList = acupunctureData['categories'] as List<dynamic>;
-    _categories = categoriesList
-        .map((e) => AcupunctureCategory.fromJson(e as Map<String, dynamic>))
-        .toList();
+      final acupunctureData = data['acupuncture'] as Map<String, dynamic>? ?? {};
+      final categoriesList =
+          acupunctureData['categories'] as List<dynamic>? ?? const [];
+      _categories = categoriesList
+          .map((e) => AcupunctureCategory.fromJson(e as Map<String, dynamic>))
+          .toList();
 
-    final penetrationList = data['penetration'] as List<dynamic>;
-    _penetrations = penetrationList
-        .map((e) => PenetrationEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
-
+      final penetrationList = data['penetration'] as List<dynamic>? ?? const [];
+      _penetrations = penetrationList
+          .map((e) => PenetrationEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      debugPrint('[AcupunctureRepository] 加载 acupuncture.json 失败，降级为空：$e\n$st');
+      _categories = const [];
+      _penetrations = const [];
+    }
     _loaded = true;
   }
 

@@ -1,13 +1,15 @@
 name: nihaisha_app
 description: "汉唐中医 - 倪海厦六经辨证中医诊断助手"
 publish_to: 'none'
-version: 1.11.19+13
+version: 1.11.22+16
 
 environment:
   sdk: ^3.12.0
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
   cupertino_icons: ^1.0.8
   flutter_markdown: ^0.7.0
@@ -22,6 +24,7 @@ dependencies:
   open_filex: ^4.7.0
   lucide_icons: ^0.257.0
   bazi_core: ^0.6.7
+  crypto: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -43,7 +46,13 @@ flutter:
     - assets/data/prescriptions.json
     - assets/data/ziwei_rules.json
     - assets/data/china_cities.json
+    - assets/data/world_cities.json
+    - assets/data/chenggu_bone_weight.json
+    - assets/data/wudou_shousheng_debt.json
+    - assets/data/luku_shousheng_debt.json
+    - assets/data/huangdi_siji_ge.json
     - assets/data/solar_term_knowledge.json
+    - assets/images/huangdi_siji_diagram.jpg
     - assets/ziwei/
     - assets/yijing/
     - assets/yijing_minggua/

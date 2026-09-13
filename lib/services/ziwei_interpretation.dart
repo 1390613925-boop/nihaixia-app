@@ -265,7 +265,10 @@ String summarizeOverall(ZiweiChart chart) {
 List<String> summarizeDecades(ZiweiChart chart) {
   final out = <String>[];
   for (final d in chart.decades) {
-    final palace = chart.palaces.firstWhere((p) => p.roleLabel == d.roleLabel);
+    // ponytail: roleLabel 对不上（宫位/大限数据不一致）时跳过该限，别让 firstWhere 抛。
+    final pIdx = chart.palaces.indexWhere((p) => p.roleLabel == d.roleLabel);
+    if (pIdx < 0) continue;
+    final palace = chart.palaces[pIdx];
     final majors = palace.majors;
     final bads = palace.bads;
     final b = StringBuffer();

@@ -11,9 +11,10 @@
 // 早晚子时（区分/不区分）口径锁定：
 // - ratHourMode=false（默认不区分）：23:00–01:00 全部「子时归自然日」，
 //   日柱当天、时柱当日子时。
-// - ratHourMode=true（区分）：由出生时刻自动判定早/晚子时
-//   （00:00–01:00 日柱顺延次日；23:00–24:00 日柱当天、时柱子时次日）。
-// 下方断言期望值（己未/甲子/戊午/壬子）均来自 bazi_core 实测，仅用于断言，
+// - ratHourMode=true（区分）：日柱 / 农历锚定「真太阳时校正后当日」；
+//   晚子时（23:00–24:00）时柱取次日子时；早子时（00:00–01:00）时柱取当日子时，
+//   **不顺延次日**（顺延会重复 +1 天，与 user 案例 1996-04-23 00:30 校验一致）。
+// 下方断言期望值（戊午/壬子）均来自 bazi_core 实测，仅用于断言，
 // 业务代码严禁硬编码干支字面量。
 import 'package:flutter_test/flutter_test.dart';
 
@@ -44,16 +45,16 @@ void main() {
     expect(r.taiXi, equals('戊寅'));
   });
 
-  test('区分早晚子时 ON · 早子时 00:20 → 日柱次日己未 时柱甲子 (noSplit)', () {
+  test('区分早晚子时 ON · 早子时 00:20 → 日柱当天戊午 时柱壬子（不顺延次日）', () {
     final r = computeBaZiPaipan(
       DateTime(2000, 1, 1, 0, 20),
       isMale: true,
       useTrueSolarTime: true,
-      ratHourMode: true, // 早子时：日柱顺延次日
+      ratHourMode: true, // 早子时：属当日之子时，日柱不顺延
       location: null,
     );
-    expect(r.bazi.day, '己未');
-    expect(r.bazi.time, '甲子');
+    expect(r.bazi.day, '戊午');
+    expect(r.bazi.time, '壬子');
   });
 
   test('区分早晚子时 OFF · 23:30 子时归自然日 → 日柱当天戊午 时柱壬子 (todayGan)', () {

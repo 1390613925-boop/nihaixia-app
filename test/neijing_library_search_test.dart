@@ -77,8 +77,9 @@ void main() {
       await tester.pump();
 
       await tester.enterText(find.byType(TextField), '阴阳');
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(); // 应用 _query
+      await tester.pump(const Duration(milliseconds: 300)); // 触发 250ms 防抖
+      await tester.pump(); // 渲染防抖后的结果列表
 
       // 命中排序（按次数降序）：着至教论(136) > 阴阳应象大论(84) >
       // 脉要精微论(53) > 阴阳别论(42)。前两项在视口内必可见；

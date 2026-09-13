@@ -177,7 +177,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Text('区分早晚子时'),
         subtitle: const Text(
             '默认关闭：子时归自然日（日柱当天）。开启后由出生时刻自动判定'
-            '晚子时（23:00–24:00，日柱当天、时柱次日）或早子时（00:00–01:00，日柱次日）'),
+            '晚子时（23:00–24:00，日柱当天、时柱次日）或早子时（00:00–01:00，属当日子时、日柱当天）'),
         value: _settings.distinguishZiShiEnabled,
         onChanged: (v) => _settings.setDistinguishZiShiEnabled(v),
         contentPadding: EdgeInsets.zero,

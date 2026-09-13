@@ -168,7 +168,7 @@ class _SavedChartsScreenState extends State<SavedChartsScreen> {
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: _charts.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (_, i) {
                     final c = _charts[i];
                     final solar = DateTime.tryParse(c.solarIso);

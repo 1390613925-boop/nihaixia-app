@@ -104,7 +104,10 @@ class _BaZiFortuneCardState extends State<BaZiFortuneCard> {
   }
 
   Widget _buildFlowYears(ColorScheme cs) {
-    final d = widget.fortune.decades.firstWhere((x) => x.index == _selected);
+    // ponytail: 换盘后 _selected 可能指向不存在的大运，取不到就不渲染，别让 firstWhere 抛。
+    final idx = widget.fortune.decades.indexWhere((x) => x.index == _selected);
+    if (idx < 0) return const SizedBox.shrink();
+    final d = widget.fortune.decades[idx];
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(10),

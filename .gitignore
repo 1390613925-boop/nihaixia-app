@@ -60,3 +60,10 @@ android/build/
 # CloudStudio deploy output (index.html + apk) and build log
 deploy_v*/
 build_apk*.log
+
+# AreaCity 行政区划数据临时目录（含 166MB 原始 ok_geo.csv，不入库）
+.areacity_tmp/
+
+# WorkBuddy / Flutter 工具产物（非 app 代码，不入库）
+.workbuddy/
+.flutter_tool_state

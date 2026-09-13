@@ -21,7 +21,7 @@ void main() {
     test('基本结构与八字', () {
       expect(chart.palaces.length, 12);
       expect(chart.baziFull, '庚辰 甲申 丙午 辛卯');
-      expect(chart.lunarText, '农历 2000年七月十七');
+      expect(chart.lunarText, '庚辰（2000）年七月十七');
       expect(chart.elementBureauLabel, '金四局');
       expect(chart.genderLabel, '男');
     });

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../widgets/state_view.dart';
 import 'package:flutter/services.dart';
@@ -21,9 +23,12 @@ class _NeijingSearchScreenState extends State<NeijingSearchScreen> {
   bool _loading = false;
   String? _error;
   String _query = '';
+  Timer? _debounce;
+  List<({NeiJingLecture doc, int hits, String snippet})>? _searchResults;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _ctrl.dispose();
     super.dispose();
   }
@@ -46,6 +51,7 @@ class _NeijingSearchScreenState extends State<NeijingSearchScreen> {
         _docs = docs;
         _cache = cache;
         _loading = false;
+        if (_query.isNotEmpty) _searchResults = _results();
       });
     } catch (e) {
       if (!mounted) return;
@@ -58,6 +64,15 @@ class _NeijingSearchScreenState extends State<NeijingSearchScreen> {
 
   void _onChanged(String v) {
     setState(() => _query = v.trim());
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      if (!mounted) return;
+      setState(() {
+        _searchResults = _query.isEmpty
+            ? <({NeiJingLecture doc, int hits, String snippet})>[]
+            : _results();
+      });
+    });
   }
 
   List<({NeiJingLecture doc, int hits, String snippet})> _results() {
@@ -93,7 +108,8 @@ class _NeijingSearchScreenState extends State<NeijingSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final results = _results();
+    final results = _searchResults ??
+        <({NeiJingLecture doc, int hits, String snippet})>[];
     return Scaffold(
       appBar: AppBar(
         title: const Text('内经 · 全文搜索'),

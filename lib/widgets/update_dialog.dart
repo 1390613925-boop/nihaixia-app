@@ -49,6 +49,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
       (progress) {
         if (mounted) setState(() => _downloadProgress = progress);
       },
+      expectedSize: widget.updateInfo.apkSize,
+      expectedSha256: widget.updateInfo.apkSha256,
     );
 
     if (!mounted) return;

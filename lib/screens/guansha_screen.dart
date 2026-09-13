@@ -5,6 +5,7 @@ import 'package:nihaisha_app/services/bazi_service.dart'
     show BaZiPaipan, computeBaZiPaipan;
 import 'package:nihaisha_app/services/city_location_service.dart'
     show CityLocation;
+import 'package:nihaisha_app/data/settings_repository.dart';
 import 'package:nihaisha_app/widgets/bazi_location_picker.dart' show BaZiLocationRow;
 import 'package:nihaisha_app/data/guansha_data.dart'
     show GuanshaEntry, searchGuansha;
@@ -44,8 +45,11 @@ class _GuanshaScreenState extends State<GuanshaScreen>
   late final TabController _tabController;
 
   DateTime _birthDate = DateTime(2022, 11, 15);
-  int _shiChenIndex = 5; // 巳时
+  int _birthHour = 10; // 出生小时（0-23），默认巳时约 10:00
+  int _birthMinute = 0; // 出生分钟（0-59）
   bool _isMale = true;
+  bool _useTrueSolarTime = true; // 真太阳时校准（默认开启）
+  bool _distinguishZiShi = false; // 区分早晚子时（默认关）
   String? _locName;
   double? _locLng;
   double? _locLat;
@@ -63,6 +67,10 @@ class _GuanshaScreenState extends State<GuanshaScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    // 同步共享排盘设置（与设置页 / 紫微排盘页双向一致）
+    _useTrueSolarTime = SettingsRepository.instance.useTrueSolarTime;
+    _distinguishZiShi =
+        SettingsRepository.instance.distinguishZiShiEnabled;
   }
 
   @override
@@ -82,6 +90,9 @@ class _GuanshaScreenState extends State<GuanshaScreen>
     if (picked != null) setState(() => _birthDate = picked);
   }
 
+  /// 由出生小时（0-23）推导时辰索引（子=0，丑=1，…；23 点归子时）。
+  int _shiChenIndexOfHour(int hour) => ((hour.clamp(0, 23) + 1) ~/ 2) % 12;
+
   void _compute() {
     setState(() {
       _paipan = null;
@@ -89,12 +100,17 @@ class _GuanshaScreenState extends State<GuanshaScreen>
       _error = null;
     });
     try {
-      final hour = _shiChen[_shiChenIndex].$2;
-      final solar = DateTime(
-          _birthDate.year, _birthDate.month, _birthDate.day, hour, 0);
+      final solar = DateTime(_birthDate.year, _birthDate.month, _birthDate.day,
+          _birthHour, _birthMinute);
       final location =
           (_locLng != null) ? Location(_locLng!, _locLat ?? 30) : null;
-      final p = computeBaZiPaipan(solar, isMale: _isMale, location: location);
+      final p = computeBaZiPaipan(
+        solar,
+        isMale: _isMale,
+        useTrueSolarTime: _useTrueSolarTime,
+        ratHourMode: _distinguishZiShi,
+        location: location,
+      );
       if (!mounted) return;
       setState(() {
         _paipan = p;
@@ -193,30 +209,74 @@ class _GuanshaScreenState extends State<GuanshaScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
                     Expanded(
                       child: InputDecorator(
                         decoration: const InputDecoration(
-                          labelText: '时辰',
+                          labelText: '时',
                           isDense: true,
                         ),
                         child: DropdownButton<int>(
-                          value: _shiChenIndex,
+                          value: _birthHour,
                           isExpanded: true,
                           underline: const SizedBox.shrink(),
                           items: [
-                            for (int i = 0; i < _shiChen.length; i++)
+                            for (int h = 0; h <= 23; h++)
                               DropdownMenuItem(
-                                value: i,
+                                value: h,
                                 child: Text(
-                                  '${_shiChen[i].$1} (${_shiChen[i].$3})',
+                                  h == 23
+                                      ? (_distinguishZiShi
+                                          ? '23(晚子时)'
+                                          : '23(子时)')
+                                      : '$h',
                                 ),
                               ),
                           ],
                           onChanged: (v) =>
-                              setState(() => _shiChenIndex = v ?? _shiChenIndex),
+                              setState(() => _birthHour = v ?? _birthHour),
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: '分',
+                          isDense: true,
+                        ),
+                        child: DropdownButton<int>(
+                          value: _birthMinute,
+                          isExpanded: true,
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            for (int m = 0; m <= 59; m++)
+                              DropdownMenuItem(
+                                value: m,
+                                child: Text(m.toString().padLeft(2, '0')),
+                              ),
+                          ],
+                          onChanged: (v) =>
+                              setState(() => _birthMinute = v ?? _birthMinute),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _chip(
+                      '时辰',
+                      '${_shiChen[_shiChenIndexOfHour(_birthHour)].$1} '
+                      '(${_shiChen[_shiChenIndexOfHour(_birthHour)].$3})',
+                      cs.primary,
                     ),
                   ],
                 ),
@@ -230,6 +290,44 @@ class _GuanshaScreenState extends State<GuanshaScreen>
                   onSelectionChanged: (s) =>
                       setState(() => _isMale = s.first),
                 ),
+                const SizedBox(height: 4),
+                // 真太阳时校准开关（与设置页 / 紫微排盘页同口径）
+                SwitchListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(
+                    '真太阳时校准',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  subtitle: Text(
+                    '按出生地经度校正平太阳时时差，专业排盘默认开启',
+                    style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+                  ),
+                  value: _useTrueSolarTime,
+                  onChanged: (v) {
+                    setState(() => _useTrueSolarTime = v);
+                    SettingsRepository.instance.setUseTrueSolarTime(v);
+                  },
+                ),
+                // 区分早晚子时开关（默认关闭；开启后由出生时刻自动判定早晚子时）
+                SwitchListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(
+                    '区分早晚子时',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  subtitle: Text(
+                    '默认关闭：子时归自然日（日柱当天）。开启后 23:00-24:00 为晚子时'
+                    '（日柱当天、时柱次日子时），00:00-01:00 为早子时（属当日子时、日柱当天）。',
+                    style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+                  ),
+                  value: _distinguishZiShi,
+                  onChanged: (v) {
+                    setState(() => _distinguishZiShi = v);
+                    SettingsRepository.instance.setDistinguishZiShiEnabled(v);
+                  },
+                ),
                 const SizedBox(height: 8),
                 BaZiLocationRow(
                   cityName: _locName,
@@ -237,10 +335,12 @@ class _GuanshaScreenState extends State<GuanshaScreen>
                   lat: _locLat,
                   onSelected: (CityLocation city) {
                     setState(() {
-                      _locName = city.name;
+                      _locName = city.label;
                       _locLng = city.lng;
                       _locLat = city.lat;
                     });
+                    // 地点变更后自动重排（与八字排盘页行为一致）
+                    if (_paipan != null) _compute();
                   },
                 ),
                 const SizedBox(height: 12),
@@ -284,16 +384,16 @@ class _GuanshaScreenState extends State<GuanshaScreen>
           children: [
             Text(
               '出生农历：${p.lunarText}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _pillar('年', pillars[0]),
-                _pillar('月', pillars[1]),
-                _pillar('日', pillars[2]),
-                _pillar('时', pillars[3]),
+                _pillar(cs, '年', pillars[0]),
+                _pillar(cs, '月', pillars[1]),
+                _pillar(cs, '日', pillars[2]),
+                _pillar(cs, '时', pillars[3]),
               ],
             ),
           ],
@@ -302,10 +402,11 @@ class _GuanshaScreenState extends State<GuanshaScreen>
     );
   }
 
-  Widget _pillar(String label, String gz) {
+  Widget _pillar(ColorScheme cs, String label, String gz) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(label,
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
         const SizedBox(height: 4),
         Text(gz, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ],
@@ -404,13 +505,14 @@ class _GuanshaScreenState extends State<GuanshaScreen>
         _buildCategoryChips(cs, categories),
         Expanded(
           child: results.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text('未找到相关条目',
-                      style: TextStyle(fontSize: 14, color: Colors.grey)),
+                      style:
+                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
                 )
               : ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  children: results.map(_buildWikiCard).toList(),
+                  children: results.map((e) => _buildWikiCard(cs, e)).toList(),
                 ),
         ),
       ],
@@ -487,8 +589,7 @@ class _GuanshaScreenState extends State<GuanshaScreen>
     );
   }
 
-  Widget _buildWikiCard(GuanshaEntry e) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _buildWikiCard(ColorScheme cs, GuanshaEntry e) {
     final accent = _severityColor(e.severity);
     return Card(
       elevation: 2,
@@ -571,7 +672,8 @@ class _GuanshaScreenState extends State<GuanshaScreen>
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text('别名：${e.aliases.join('、')}',
-                    style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                    style:
+                        TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
               ),
             Padding(
               padding: const EdgeInsets.only(top: 6),
@@ -615,10 +717,37 @@ class _GuanshaScreenState extends State<GuanshaScreen>
         children: [
           Text(title,
               style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  fontSize: 14, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(body, style: const TextStyle(fontSize: 14, height: 1.5)),
         ],
+      ),
+    );
+  }
+
+  /// 圆角小标签：用于展示由出生时刻推导的时辰名（与紫微排盘页同口径）。
+  Widget _chip(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(fontSize: 12),
+          children: [
+            TextSpan(
+              text: '$label ',
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            TextSpan(
+              text: value,
+              style: TextStyle(fontWeight: FontWeight.bold, color: color),
+            ),
+          ],
+        ),
       ),
     );
   }

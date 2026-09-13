@@ -62,16 +62,6 @@ class _DosageConverterScreenState extends State<DosageConverterScreen> {
     ['竹叶', '一握', '约12g'],
   ];
 
-  List<String> get _currentUnits {
-    if (_unit == '两' || _unit == '铢' || _unit == '斤' || _unit == '石' || _unit == '钱') {
-      return _weightUnits;
-    } else if (_volumeUnits.contains(_unit)) {
-      return _volumeUnits;
-    } else {
-      return _lengthUnits;
-    }
-  }
-
   String _convert() {
     final input = double.tryParse(_inputController.text);
     // tryParse 会接受 'NaN'/'Infinity'/'1e309' 等，转为 NaN/Infinity 后
@@ -144,7 +134,7 @@ class _DosageConverterScreenState extends State<DosageConverterScreen> {
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
-                  value: _unit,
+                  initialValue: _unit,
                   decoration: const InputDecoration(
                     labelText: '单位',
                     border: OutlineInputBorder(),

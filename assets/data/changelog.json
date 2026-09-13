@@ -1,6 +1,45 @@
 {
   "changelog": [
     {
+      "version": "1.11.22",
+      "date": "2026-09-13",
+      "title": "黄历神诞检索入口 + 周公解梦记梦/玉匣灵兆身兆记录",
+      "changes": [
+        "每日黄历右上角新增 🎏 入口，进入「农历节日·神诞」表（玉匣记神仙圣诞+潮汕节俗+斋期共 219 条），支持关键词搜索、农历/公历双显，零新依赖零新资产",
+        "周公解梦右上角 📝 入口新增「记梦」面板，写入 Bookmark(category:'记梦')",
+        "玉匣灵兆右上角 ⚠️ 入口新增「记录身体征兆」面板，写入 Bookmark(category:'身兆记录')，source 自动带当前时辰",
+        "记梦/身兆记录复用 Bookmark 模型 + 既有 bookmarks 表，无新表/无数据库迁移，insertBookmark 触发收藏页按 category 自动归类显示",
+        "新增 test/festival_lookup_test.dart（4 例：双源合并升序、搜妈祖命中、公历可逆回推、越界返回 null）全过；flutter analyze 0 error"
+      ]
+    },
+    {
+      "version": "1.11.21",
+      "date": "2026-09-12",
+      "title": "工具箱中医/玄学区划分 + 中文日期选择器修复",
+      "changes": [
+        "工具箱 18 项按主题拆分为「中医区(6) / 玄学区(11) / 通用区(1=设置)」三块带配色分区头，顺序固定 中医区 → 玄学区 → 设置（ZoneSection 组件 + AppColors 双分区色 token）",
+        "新增 ZoneSection 组件（enum Zone{general,tcm,metaphysics}）：彩色标题 + 着色背景（暖褐=中医 / 冷紫=玄学 / primary=通用），分区边界清晰",
+        "AppColors 新增 tcmZone / metaphysicsZone 双主题色 token（lib/theme/app_colors.dart，light/dark/copyWith/lerp 全补）",
+        "18 张 _ToolCard 原样保留，扁平 ListView 重构为 3 个 ZoneSection，零引擎/路由改动",
+        "修复日期选择器英文：MaterialApp 缺 localizationsDelegates/supportedLocales/locale 且 pubspec 缺 flutter_localizations，8 处 showDatePicker 回退英文；现强制 locale=zh_CN + 加 flutter_localizations 依赖，年月日与按钮全中文",
+        "flutter analyze 0 error"
+      ]
+    },
+    {
+      "version": "1.11.20",
+      "date": "2026-09-10",
+      "title": "工具箱新增三大民俗命理功能（袁天罡称骨 / 受生债查询 / 轩辕黄帝四季歌）",
+      "changes": [
+        "工具箱新增「民俗文化参考」专区，入驻袁天罡称骨算命、受生债查询、轩辕黄帝四季歌三项功能，均与医疗诊断工具分区明确",
+        "三项功能均内置免责声明卡：标注「民俗文化参考，不构成医学诊断或治疗建议」",
+        "袁天罡称骨算命：按出生年/月/日/时对照称骨歌诀累计骨重，查表得命格批语（lib/screens/chenggu_bone_screen.dart + lib/data/chenggu_data.dart）",
+        "受生债查询：按出生年天干 + 生肖查表得受生债库官、数目与纳音，附民俗文化背景（lib/screens/shousheng_debt_screen.dart + lib/data/shousheng_data.dart）",
+        "轩辕黄帝四季歌：四季养生歌诀浏览 + 按节气/季节检索，配图替换为 983×983 无水印干净图（lib/screens/huangdi_siji_screen.dart + lib/data/huangdi_siji_data.dart）",
+        "黄帝四季歌配图由 1600×1520 裁剪去水印图换为 983×983 无水印原图，体积 381KB → 175KB，flutter analyze 三文件 0 error",
+        "三项功能零新增依赖"
+      ]
+    },
+    {
       "version": "1.11.19",
       "date": "2026-09-10",
       "title": "修复深色模式下正文文字不可读（闭门课等 Markdown 阅读页）",

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/herb.dart';
 
@@ -125,10 +126,16 @@ class HerbRepository {
 
   static Future<void> load() async {
     if (_loaded) return;
-    final data = await rootBundle.loadString('assets/data/herbs.json');
-    final map = json.decode(data) as Map<String, dynamic>;
-    final list = map['herbs'] as List<dynamic>;
-    _herbs = list.map((e) => Herb.fromJson(e as Map<String, dynamic>)).toList();
+    try {
+      final data = await rootBundle.loadString('assets/data/herbs.json');
+      final map = json.decode(data) as Map<String, dynamic>;
+      final list = map['herbs'] as List<dynamic>? ?? const [];
+      _herbs =
+          list.map((e) => Herb.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e, st) {
+      debugPrint('[HerbRepository] 加载 herbs.json 失败，降级为空：$e\n$st');
+      _herbs = const [];
+    }
     _loaded = true;
   }
 

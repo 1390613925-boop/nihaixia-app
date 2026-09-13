@@ -3,6 +3,7 @@ import '../widgets/state_view.dart';
 import 'package:nihaisha_app/services/lunar_almanac_service.dart';
 import '../widgets/almanac_cards.dart';
 import '../data/saved_chart_repository.dart';
+import 'festival_lookup_screen.dart';
 
 /// 滑动手势方向（纯函数 [resolveSwipe] 的判定结果）。
 enum SwipeDir { dayNext, dayPrev }
@@ -101,6 +102,14 @@ class _DailyAlmanacScreenState extends State<DailyAlmanacScreen> {
       appBar: AppBar(
         title: const Text('每日黄历'),
         actions: [
+          IconButton(
+            tooltip: '查农历节日 / 神诞',
+            icon: const Icon(Icons.festival_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FestivalLookupScreen()),
+            ),
+          ),
           IconButton(
             tooltip: '选择日期',
             icon: const Icon(Icons.calendar_month_outlined),

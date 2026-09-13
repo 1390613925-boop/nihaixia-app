@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/database_helper.dart';
+import '../models/bookmark.dart';
 import '../data/dream_data.dart';
 
 /// 周公解梦 —— 《周公解梦大全》结构化数据集民俗占梦查询。
@@ -42,13 +44,69 @@ class _DreamScreenState extends State<DreamScreen> {
     super.dispose();
   }
 
+  /// 记梦：写入一条「记梦」收藏，自动出现在收藏页（category 动态归类）。
+  void _showRecordDream(BuildContext context) {
+    final titleC = TextEditingController();
+    final bodyC = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            16, 16, 16, MediaQuery.of(ctx).viewInsets.bottom + 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleC,
+              decoration: const InputDecoration(labelText: '梦的关键词 / 标题'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: bodyC,
+              maxLines: 4,
+              decoration: const InputDecoration(labelText: '梦境描述（可选）'),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () async {
+                final t = titleC.text.trim();
+                if (t.isEmpty) return;
+                await DatabaseHelper.instance.insertBookmark(Bookmark(
+                  title: t,
+                  content: bodyC.text.trim(),
+                  category: '记梦',
+                  source: '周公解梦·记梦',
+                ));
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      ),
+    ).whenComplete(() {
+      titleC.dispose();
+      bodyC.dispose();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final results = searchDreams(_query, _category);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('周公解梦')),
+      appBar: AppBar(
+        title: const Text('周公解梦'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_note),
+            tooltip: '记梦',
+            onPressed: () => _showRecordDream(context),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           _buildDisclaimer(cs),
@@ -56,10 +114,11 @@ class _DreamScreenState extends State<DreamScreen> {
           _buildCategoryChips(cs),
           Expanded(
             child: results.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       '未找到相关梦境',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                      style:
+                          TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
                     ),
                   )
                 : ListView(
@@ -202,7 +261,7 @@ class _DreamScreenState extends State<DreamScreen> {
             const SizedBox(height: 8),
             Text(
               '出处：${e.source}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
           ],
         ),

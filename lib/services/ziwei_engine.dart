@@ -427,8 +427,8 @@ ZiweiChart calculateZiweiChart({
   bool ratHourMode = false,
 }) {
   // 紫微盘统一以「todayGan（子时归自然日）」为底层排盘基准：
-  // 晚子时（日柱当天）由 todayGan 直接得出、时柱再覆盖为次日子时；
-  // 早子时（日柱次日）由「出生日 +1 天」得出；关闭或 01:00–23:00 即 todayGan。
+  // 晚子时（校正后 23:00–24:00）日柱取校正当日、时柱再覆盖为次日子时；
+  // 其余（含早子时 00:00–01:00）即 todayGan，日柱取校正当日、不顺延次日。
   // 不能用规则集默认（默认是 noSplit），否则 23–24 点会被整体顺延到次日，盘式全错。
   // 必须自建规则集并把同一 calendarOptions 实例交给 date 与 calculate，
   // 否则 ZiweiEngine 会报 options 与 ruleset.calendarOptions 不一致。
@@ -450,23 +450,36 @@ ZiweiChart calculateZiweiChart({
     mingZhuRule: baseRuleset.mingZhuRule,
     shenZhuRule: baseRuleset.shenZhuRule,
   );
-  // 区分早晚子时：开启后 23:00–24:00 归「晚子时」（日柱当天、时柱子时由下行覆盖），
-  // 00:00–01:00 归「早子时」（日柱次日）；关闭或 01:00–23:00 不影响（子时归自然日）。
-  // 早子时（开启且 00:00–01:00）：日柱取次日 → 出生日 +1 天按默认（todayGan）排盘。
-  // 晚子时（开启且 23:00–24:00）：日柱当天、时柱子时次日 → 默认排盘后覆盖时柱（见下）。
-  // 关闭开关或 01:00–23:00：默认排盘。全程使用规则集默认（todayGan），既符合紫微流派
-  // 口径，又避免 date.options 与 ruleset.calendarOptions 不一致报错；早晚子时的日/时柱
-  // 差异由「日期偏移」（早子时）与「时柱覆盖」（晚子时）两种手段实现，不另造 options。
+  // 开早晚子时：日柱 / 农历一律锚定「校正后（真太阳时）当日」（todayGan 口径）：
+  // 晚子时（校正后 23:00–24:00）仅把时柱覆盖为次日子时；
+  // 早子时（00:00–01:00）不特殊处理（本就属当日之子时），与关闭开关且无跨日校正时一致。
+  // 全程使用规则集默认（todayGan），既符合紫微流派口径，又避免 date.options 与
+  // ruleset.calendarOptions 不一致报错；早晚子时的差异仅由「时柱覆盖」实现，不另造 options。
   // 校正逻辑执行位置（约束 A/B）：原始 solar 只读，永远不把偏移后的日期直接喂内核。
   // 内核统一以「原始 solar + todayGan 规则集」排盘，得到基础盘（命宫 / 十二宫 /
-  // 农历均对应真实公历输入）；早子时（hour<1）与晚子时（hour>=23）的日 / 时柱及
-  // 农历，在下方通过 copyWith 以「校正后的干支集合」覆盖，不污染内核其它派生字段。
+  // 农历均对应真实公历输入）；晚子时的时柱在下方通过 copyWith 覆盖，不污染其它派生字段。
+  // 不开早晚子时（子时归自然日）：真太阳时照常校正；但**仅当校正后落在子时**
+  // （≥23 或 <1）时，该子时归「出生时钟日（自然日）」——整盘（含命宫）以出生日排。
+  // 校正后为非子时（如 22:xx 亥时）则仍按校正后当日，与开一致（见 bazi_service 同口径）。
+  bool snapBackToBirthDay = false;
+  if (!ratHourMode && useTrueSolarTime) {
+    final probe = ZiweiDate.fromSolar(
+      AstroDateTime(solar.year, solar.month, solar.day, solar.hour, solar.minute),
+      gender: gender,
+      options: ruleset.calendarOptions,
+      location: location,
+      useTrueSolarTime: true,
+    );
+    final pv = probe.trueSolarTime;
+    if (pv != null && (pv.hour >= 23 || pv.hour < 1)) snapBackToBirthDay = true;
+  }
+  final bool baseUseTst = snapBackToBirthDay ? false : useTrueSolarTime;
   final date = ZiweiDate.fromSolar(
     AstroDateTime(solar.year, solar.month, solar.day, solar.hour, solar.minute),
     gender: gender,
     options: ruleset.calendarOptions,
     location: location,
-    useTrueSolarTime: useTrueSolarTime,
+    useTrueSolarTime: baseUseTst,
   );
   final plate = ZiweiEngine.calculate(date, ruleset);
 
@@ -554,11 +567,14 @@ ZiweiChart calculateZiweiChart({
   final baziDay = '${bz.day.gan.label}${bz.day.zhi.label}';
   final baziTime = '${bz.time.gan.label}${bz.time.zhi.label}';
 
-  // 出生农历按「日历日正午」取，与八字屏 / 关煞屏同口径（见 bazi_service）：
-  // 避免午夜出生 + 真太阳时把农历回拨到前一天，导致三屏展示不一致。
-  final lunar = LunarDate.fromSolar(
-    AstroDateTime(solar.year, solar.month, solar.day, 12, 0, 0),
-  );
+  // 出生农历基准日 = 校正后（真太阳时）当日；若未开真太阳时或已回拨出生日（子时归自然日）
+  // 则取出生日。均按「日历日正午」取，与八字屏 / 关煞屏同口径（见 bazi_service）。
+  final zTst = date.trueSolarTime;
+  final bool viaTst = baseUseTst && zTst != null;
+  final int lunarY = viaTst ? zTst.year : solar.year;
+  final int lunarM = viaTst ? zTst.month : solar.month;
+  final int lunarD = viaTst ? zTst.day : solar.day;
+  final lunar = LunarDate.fromSolar(AstroDateTime(lunarY, lunarM, lunarD, 12, 0, 0));
 
   ZiweiChart chart = ZiweiChart(
     baziYear: baziYear,
@@ -566,7 +582,7 @@ ZiweiChart calculateZiweiChart({
     baziDay: baziDay,
     baziTime: baziTime,
     lunarText:
-        '${_lunarYearGanZhi(lunar.lunarYear)}（${solar.year}）年${lunar.monthNameStr}月${lunar.dayName}',
+        '${_lunarYearGanZhi(lunar.lunarYear)}（$lunarY）年${lunar.monthNameStr}月${lunar.dayName}',
     lunarMonth: lunar.month,
     lunarIsLeap: lunar.isLeap,
     genderLabel: gender == Gender.male ? '男' : '女',
@@ -585,10 +601,11 @@ ZiweiChart calculateZiweiChart({
   // 早晚子时以「真太阳时校正后」的小时判定（与 bazi_service 同口径）：真太阳时
   // 校正在 ZiweiDate 内部完成，若用原始小时先判子时会出现顺序颠倒
   //（先 +1 天再被校正回前一天 → 日柱差一天、时柱落到亥时）。
-  final zTst = date.trueSolarTime;
   final effHour =
       (useTrueSolarTime && zTst != null) ? zTst.hour : solar.hour;
-  // 晚子时：时柱取「次日子时」与八字口径一致（日柱 / 命宫 / 农历保持当天口径）。
+  // 晚子时（23:00 ≤ t < 24:00）：日柱 / 农历已按「校正后当日」计（见上），
+  // 仅时柱取「次日子时」与八字口径一致；早子时（00:00–01:00）本就属当日之子时，
+  // 不再顺延次日（顺延会重复 +1 天）。
   if (ratHourMode && effHour >= 23) {
     final nextTime = calcZiweiBaZi(
       DateTime(solar.year, solar.month, solar.day, solar.hour, solar.minute),
@@ -598,33 +615,6 @@ ZiweiChart calculateZiweiChart({
       ratHourMode: RatHourMode.noSplit,
     );
     chart = chart.copyWith(baziTime: nextTime.time);
-  }
-  // 早子时：日柱取次日、时柱子时、农历同步切换到次日（约束 B）。
-  // 单独以「出生日 +1 天」构造一个只读 ZiweiDate，仅用于提取校正后的干支与农历，
-  // 不进入内核排盘，确保原始 solar 不被偏移后喂内核（约束 A）。
-  else if (ratHourMode && effHour < 1) {
-    final nextSolar = DateTime(solar.year, solar.month, solar.day, solar.hour, solar.minute)
-        .add(const Duration(days: 1));
-    final nextDate = ZiweiDate.fromSolar(
-      AstroDateTime(nextSolar.year, nextSolar.month, nextSolar.day, nextSolar.hour, nextSolar.minute),
-      gender: gender,
-      options: ruleset.calendarOptions,
-      location: location,
-      useTrueSolarTime: useTrueSolarTime,
-    );
-    final nbz = nextDate.bazi;
-    // 早子时农历同步切换到次日，同样取「日历日正午」口径，与主分支保持一致。
-    final nextLunar = LunarDate.fromSolar(
-      AstroDateTime(nextSolar.year, nextSolar.month, nextSolar.day, 12, 0, 0),
-    );
-    chart = chart.copyWith(
-      baziDay: '${nbz.day.gan.label}${nbz.day.zhi.label}',
-      baziTime: '${nbz.time.gan.label}${nbz.time.zhi.label}',
-      lunarText:
-          '${_lunarYearGanZhi(nextLunar.lunarYear)}（${nextSolar.year}）年${nextLunar.monthNameStr}月${nextLunar.dayName}',
-      lunarMonth: nextLunar.month,
-      lunarIsLeap: nextLunar.isLeap,
-    );
   }
   return chart;
 }

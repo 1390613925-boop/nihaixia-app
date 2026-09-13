@@ -30,6 +30,26 @@ void main() {
     expect(find.textContaining('山雷颐'), findsWidgets);
   });
 
+  testWidgets('生辰输入改为「时+分」（与八字/紫微同口径）', (tester) async {
+    await tester.pumpWidget(_app(const MingGuaCalculatorScreen()));
+
+    // 旧版 4 个下拉（年/月/日/时辰）；新版 5 个（年/月/日/时/分）。
+    expect(find.byType(DropdownButton<int>), findsNWidgets(5));
+
+    // 默认 10:00 → 巳时，与改动前默认（_shiChenIndex=5 即 10:00）等价。
+    expect(find.text('时辰：巳时'), findsOneWidget);
+
+    // 把「时」改成 12 → 午时（证明下拉真的驱动了时辰推导）。
+    final hourDropdown = find.byType(DropdownButton<int>).at(3); // 年/月/日/时/分
+    await tester.ensureVisible(hourDropdown);
+    await tester.tap(hourDropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('12').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('时辰：午时'), findsOneWidget);
+  });
+
   testWidgets('四柱命卦讲义库渲染三区块', (tester) async {
     await tester.pumpWidget(_app(const MingGuaLibraryScreen()));
 

@@ -46,10 +46,10 @@ void main() {
 
   group('城市经纬度生效（location 真正流入引擎）', () {
     test('数据集含北京/乌鲁木齐且坐标正确', () {
-      expect(bj.lng, closeTo(116.43585, 0.01));
-      expect(bj.lat, closeTo(40.10859, 0.01));
-      expect(urumqi.lng, closeTo(87.77529, 0.01));
-      expect(urumqi.lat, closeTo(43.56514, 0.01));
+      expect(bj.lng, closeTo(116.405285, 0.01));
+      expect(bj.lat, closeTo(39.904989, 0.01));
+      expect(urumqi.lng, closeTo(87.616824, 0.01));
+      expect(urumqi.lat, closeTo(43.825377, 0.01));
     });
 
     test('北京 vs 乌鲁木齐（均开真太阳时）时辰不同 → 经度被使用', () {

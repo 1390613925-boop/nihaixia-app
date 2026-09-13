@@ -11,6 +11,7 @@
 /// - [extractKnownNames]：箭头分段 + 噪声清洗 + 长度降序非重叠匹配 + 去重。
 library;
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 
 import 'chinese_convert.dart';
@@ -408,7 +409,13 @@ List<MedicalCase> parseMedicalCaseTable(String md) {
 List<MedicalCase>? _allCasesCache;
 Future<List<MedicalCase>> getAllMedicalCases() async {
   if (_allCasesCache != null) return _allCasesCache!;
-  final md = await rootBundle.loadString('assets/medical_cases/cases_table.md');
-  _allCasesCache = parseMedicalCaseTable(md);
+  try {
+    final md =
+        await rootBundle.loadString('assets/medical_cases/cases_table.md');
+    _allCasesCache = parseMedicalCaseTable(md);
+  } catch (e, st) {
+    debugPrint('[MedicalCase] 加载 cases_table.md 失败，降级为空：$e\n$st');
+    _allCasesCache = const [];
+  }
   return _allCasesCache!;
 }

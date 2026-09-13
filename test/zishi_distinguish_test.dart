@@ -38,8 +38,9 @@ void main() {
   });
 
   // 用例2：ratHourMode=true + 2026-09-06 00:20（早子时）
-  // 日柱 = 次日（甲申），时柱 = 新一天子时（甲子）。
-  test('用例2 ON + 00:20（早子时）→ 日柱甲申 时柱甲子', () {
+  // 早子时本就属「当日」之子时 → 日柱 = 当天（癸未），时柱 = 当日子时（壬子）；
+  // 与关闭开关结果一致（不再顺延次日）。
+  test('用例2 ON + 00:20（早子时）→ 日柱当天癸未 时柱壬子（不顺延）', () {
     final solar = DateTime(2026, 9, 6, 0, 20);
     final r = computeBaZiPaipan(
       solar,
@@ -48,8 +49,8 @@ void main() {
       ratHourMode: true,
       location: null,
     );
-    expect(r.bazi.day, '甲申');
-    expect(r.bazi.time, '甲子');
+    expect(r.bazi.day, '癸未');
+    expect(r.bazi.time, '壬子');
 
     final chart = calculateZiweiChart(
       solar: solar,
@@ -57,8 +58,8 @@ void main() {
       useTrueSolarTime: true,
       ratHourMode: true,
     );
-    expect(chart.baziDay, '甲申');
-    expect(chart.baziTime, '甲子');
+    expect(chart.baziDay, '癸未');
+    expect(chart.baziTime, '壬子');
   });
 
   // 用例3：ratHourMode=false + 2026-09-06 23:30（默认不区分）
@@ -123,31 +124,29 @@ void main() {
     expect(cOn.originMingIndex, cOff.originMingIndex);
   });
 
-  // 紫微必须吃到校正后的日柱：晚子时（23:30）开启后日柱仍为当天「癸未」，
-  // 早子时（00:20）开启后日柱应为次日「甲申」。本引擎十二宫位由农历月 + 时辰决定，
-  // 与日柱无关，故宫位本身不变属正常；日柱校正通过紫微盘的 baziDay 字段体现——
-  // 以此证明校正后的日柱已完整喂入紫微排盘入口，而非沿用未校正的原始时间。
-  test('紫微吃到校正后日柱：用例1（癸未）与用例2（甲申）baziDay 不同', () {
-    final c1 = calculateZiweiChart(
-      solar: DateTime(2026, 9, 6, 23, 30),
+  // 早子时（00:20）开关 ON/OFF 结果应完全一致：属当日子时，日柱不顺延。
+  test('早子时 ON/OFF 盘式一致（日柱均当天，不顺延次日）', () {
+    final solar = DateTime(2026, 9, 6, 0, 20);
+    final cOn = calculateZiweiChart(
+      solar: solar,
       gender: Gender.male,
       useTrueSolarTime: true,
       ratHourMode: true,
     );
-    final c2 = calculateZiweiChart(
-      solar: DateTime(2026, 9, 6, 0, 20),
+    final cOff = calculateZiweiChart(
+      solar: solar,
       gender: Gender.male,
       useTrueSolarTime: true,
-      ratHourMode: true,
+      ratHourMode: false,
     );
-    expect(c1.baziDay, '癸未');
-    expect(c2.baziDay, '甲申');
-    // 日柱不同，证明紫微盘基于校正后日柱（而非原始时间）生成。
-    expect(c1.baziDay != c2.baziDay, isTrue);
+    expect(cOn.baziDay, '癸未');
+    expect(cOn.baziTime, '壬子');
+    expect(cOn.baziFull, cOff.baziFull);
+    expect(cOn.lunarText, cOff.lunarText);
   });
 
-  // 约束 B（早子时）：日柱取次日、农历同步切换到次日农历，公历标题仍显示原始输入。
-  test('约束B 早子时：农历跟随校正日柱（公历+1 农历同步+1）', () {
+  // 约束 B（早子时）：日柱 / 农历保持当天口径不变（不顺延次日），仅当日子时。
+  test('约束B 早子时：农历与日柱保持当天（不顺延次日）', () {
     final solar = DateTime(2026, 9, 6, 0, 20);
     final early = calculateZiweiChart(
       solar: solar,
@@ -155,19 +154,19 @@ void main() {
       useTrueSolarTime: true,
       ratHourMode: true,
     );
-    // 校正后的参考日 = 出生日 +1 天（todayGan 口径、关闭子时修正），其农历即应显示的农历。
-    final refNext = calculateZiweiChart(
-      solar: DateTime(2026, 9, 7, 0, 20),
+    // 参考 = 同一公历日的 noon 基准盘（todayGan、关闭子时修正），农历即应显示的当日农历。
+    final refSameDay = calculateZiweiChart(
+      solar: DateTime(2026, 9, 6, 12, 0),
       gender: Gender.male,
       useTrueSolarTime: true,
       ratHourMode: false,
     );
-    expect(early.baziDay, '甲申');
-    expect(early.baziTime, '甲子');
-    // 农历显示跟随校正后的干支：与「+1 天」命盘的农历完全一致。
-    expect(early.lunarText, refNext.lunarText);
-    expect(early.lunarMonth, refNext.lunarMonth);
-    expect(early.lunarIsLeap, refNext.lunarIsLeap);
+    expect(early.baziDay, '癸未');
+    expect(early.baziTime, '壬子');
+    // 农历显示保持当天：与「同日 noon」命盘的农历完全一致（不顺延）。
+    expect(early.lunarText, refSameDay.lunarText);
+    expect(early.lunarMonth, refSameDay.lunarMonth);
+    expect(early.lunarIsLeap, refSameDay.lunarIsLeap);
   });
 
   // 约束 B（晚子时）：日柱 / 农历保持当天口径不变，仅时柱由壬子校正为甲子。

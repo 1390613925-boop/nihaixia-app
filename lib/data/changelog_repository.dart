@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// 一条更新日志（对应一个版本）。
@@ -35,15 +36,20 @@ class ChangelogRepository {
 
   static Future<void> load() async {
     if (_loaded) return;
-    final jsonStr =
-        await rootBundle.loadString('assets/data/changelog.json');
-    final data = json.decode(jsonStr) as Map<String, dynamic>;
-    final list = (data['changelog'] as List<dynamic>? ?? [])
-        .map((e) => ChangelogEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
-    // 按版本号倒序（最新在前）；changelog.json 已是最新在前，这里再兜底排序。
-    list.sort((a, b) => _compareVersion(b.version, a.version));
-    _entries = list;
+    try {
+      final jsonStr =
+          await rootBundle.loadString('assets/data/changelog.json');
+      final data = json.decode(jsonStr) as Map<String, dynamic>;
+      final list = (data['changelog'] as List<dynamic>? ?? [])
+          .map((e) => ChangelogEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+      // 按版本号倒序（最新在前）；changelog.json 已是最新在前，这里再兜底排序。
+      list.sort((a, b) => _compareVersion(b.version, a.version));
+      _entries = list;
+    } catch (e, st) {
+      debugPrint('[ChangelogRepository] 加载 changelog.json 失败，降级为空：$e\n$st');
+      _entries = const [];
+    }
     _loaded = true;
   }
 

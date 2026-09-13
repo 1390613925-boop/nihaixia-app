@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'data/acupuncture_repository.dart';
 import 'data/acupoint_repository.dart';
 import 'data/changelog_repository.dart';
@@ -59,6 +60,16 @@ class NiHaishaApp extends StatelessWidget {
             ),
             child: HomeScreen(textScaleFactor: settings.textScaleFactor),
           ),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('zh', 'CN'),
+            Locale('en', 'US'),
+          ],
+          locale: const Locale('zh', 'CN'),
         );
       },
     );

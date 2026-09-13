@@ -238,4 +238,46 @@ void main() {
       }
     });
   });
+
+  // 天德贵人回归：口诀「正丁二申宫，三壬四辛同，五亥六甲上，七癸八寅逢，
+  // 九丙十居乙，子巳丑庚中」。其中卯/午/酉/子 四仲月落在**地支**上，
+  // 修复前只看天干 → 这 4 个月永不触发（本组即是该 bug 的回归护栏）。
+  group('天德贵人（12 月支全表）', () {
+    const table = <String, String>{
+      '寅': '丁', '卯': '申', '辰': '壬', '巳': '辛',
+      '午': '亥', '未': '甲', '申': '癸', '酉': '寅',
+      '戌': '丙', '亥': '乙', '子': '巳', '丑': '庚',
+    };
+    const stemChars = '甲乙丙丁戊己庚辛壬癸';
+
+    table.forEach((monthZhi, tianDe) {
+      test('月支$monthZhi → 天德$tianDe', () {
+        final isStem = stemChars.contains(tianDe);
+        // 把天德字放在「年」位（干或支皆可），月支置于「月」位。
+        final r = analyzeBaZi(
+          gans: isStem
+              ? [tianDe, '甲', '甲', '甲']
+              : const ['甲', '甲', '甲', '甲'],
+          zhis: isStem
+              ? ['子', monthZhi, '子', '子']
+              : [tianDe, monthZhi, '子', '子'],
+        );
+        expect(
+          r.shensha.any(
+              (s) => s.name == '天德' && s.pillar == '年' && s.pos == tianDe),
+          isTrue,
+          reason: '月支$monthZhi 天德应为$tianDe',
+        );
+      });
+    });
+
+    test('反例：卯月四支无申 → 天德不出现', () {
+      final r = analyzeBaZi(
+        gans: const ['甲', '甲', '甲', '甲'],
+        zhis: const ['子', '卯', '丑', '辰'],
+      );
+      expect(r.shensha.where((s) => s.name == '天德'), isEmpty,
+          reason: '卯月天德为申（地支），四支无申则不应命中');
+    });
+  });
 }

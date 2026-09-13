@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/formula.dart';
 import '../models/diagnosis.dart';
@@ -8,11 +9,16 @@ class FormulaRepository {
 
   static Future<void> load() async {
     if (_formulas != null) return; // 幂等：重复调用跳过，避免重解析 + 防止与首次 late final 缓存竞争
-    final jsonStr =
-        await rootBundle.loadString('assets/data/formulas.json');
-    final data = json.decode(jsonStr) as Map<String, dynamic>;
-    final list = data['formulas'] as List;
-    _formulas = list.map((f) => Formula.fromJson(f)).toList();
+    try {
+      final jsonStr =
+          await rootBundle.loadString('assets/data/formulas.json');
+      final data = json.decode(jsonStr) as Map<String, dynamic>;
+      final list = data['formulas'] as List<dynamic>? ?? const [];
+      _formulas = list.map((f) => Formula.fromJson(f)).toList();
+    } catch (e, st) {
+      debugPrint('[FormulaRepository] 加载 formulas.json 失败，降级为空：$e\n$st');
+      _formulas = const [];
+    }
   }
 
   static List<Formula> getAll() {

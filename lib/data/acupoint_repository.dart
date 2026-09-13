@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/acupoint_detail.dart';
 
@@ -8,12 +9,17 @@ class AcupointRepository {
 
   static Future<void> load() async {
     if (_loaded) return;
-    final jsonStr = await rootBundle.loadString('assets/data/acupoints.json');
-    final data = json.decode(jsonStr) as Map<String, dynamic>;
-    final list = data['acupoints'] as List<dynamic>;
-    _acupoints = list
-        .map((e) => AcupointDetail.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      final jsonStr = await rootBundle.loadString('assets/data/acupoints.json');
+      final data = json.decode(jsonStr) as Map<String, dynamic>;
+      final list = data['acupoints'] as List<dynamic>? ?? const [];
+      _acupoints = list
+          .map((e) => AcupointDetail.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      debugPrint('[AcupointRepository] 加载 acupoints.json 失败，降级为空：$e\n$st');
+      _acupoints = const [];
+    }
     _loaded = true;
   }
 

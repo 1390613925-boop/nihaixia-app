@@ -269,8 +269,9 @@ class _DiagnosisHistoryScreenState extends State<DiagnosisHistoryScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final nav = Navigator.of(ctx);
               await DatabaseHelper.instance.clearDiagnosisHistory();
-              Navigator.pop(ctx);
+              nav.pop();
               _loadHistory();
             },
             child: Text('清空', style: TextStyle(color: context.colors.danger)),

@@ -56,6 +56,10 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color meridianJueyinContainer;
   final Color onMeridianJueyin;
 
+  // ---- 工具页分区色（通用 / 中医暖褐 / 玄学冷紫） ----
+  final Color tcmZone;
+  final Color metaphysicsZone;
+
   const AppColors({
     required this.primary,
     required this.onPrimary,
@@ -96,6 +100,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.meridianJueyin,
     required this.meridianJueyinContainer,
     required this.onMeridianJueyin,
+    required this.tcmZone,
+    required this.metaphysicsZone,
   });
 
   /// 六经 container = 该色 12% alpha 叠加在底色上（light 白底 / dark 深底）。
@@ -144,6 +150,8 @@ class AppColors extends ThemeExtension<AppColors> {
     meridianJueyin: const Color(0xFF37474F),
     meridianJueyinContainer: _tint(const Color(0xFF37474F), dark: false),
     onMeridianJueyin: const Color(0xFF201B15),
+    tcmZone: const Color(0xFF9C6B3F),
+    metaphysicsZone: const Color(0xFF6A4C93),
   );
 
   static final AppColors dark = AppColors(
@@ -186,6 +194,8 @@ class AppColors extends ThemeExtension<AppColors> {
     meridianJueyin: const Color(0xFF90A4AE),
     meridianJueyinContainer: _tint(const Color(0xFF90A4AE), dark: true),
     onMeridianJueyin: const Color(0xFFEFE9E2),
+    tcmZone: const Color(0xFFD7A877),
+    metaphysicsZone: const Color(0xFFB39DDB),
   );
 
   /// 六经名 → 主色（UI 层共用，替代散落的硬编码色）。
@@ -269,6 +279,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? meridianJueyin,
     Color? meridianJueyinContainer,
     Color? onMeridianJueyin,
+    Color? tcmZone,
+    Color? metaphysicsZone,
   }) {
     return AppColors(
       primary: primary ?? this.primary,
@@ -317,6 +329,8 @@ class AppColors extends ThemeExtension<AppColors> {
       meridianJueyinContainer:
           meridianJueyinContainer ?? this.meridianJueyinContainer,
       onMeridianJueyin: onMeridianJueyin ?? this.onMeridianJueyin,
+      tcmZone: tcmZone ?? this.tcmZone,
+      metaphysicsZone: metaphysicsZone ?? this.metaphysicsZone,
     );
   }
 
@@ -371,6 +385,8 @@ class AppColors extends ThemeExtension<AppColors> {
       meridianJueyinContainer:
           l(meridianJueyinContainer, other.meridianJueyinContainer),
       onMeridianJueyin: l(onMeridianJueyin, other.onMeridianJueyin),
+      tcmZone: l(tcmZone, other.tcmZone),
+      metaphysicsZone: l(metaphysicsZone, other.metaphysicsZone),
     );
   }
 }

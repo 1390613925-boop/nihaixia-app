@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/database_helper.dart';
+import '../models/bookmark.dart';
 import '../data/yuxiaji_omen_data.dart';
 
 /// 十二时辰 → 索引（0=子 … 11=亥）。
@@ -35,7 +37,16 @@ class _YuxiajiOmenScreenState extends State<YuxiajiOmenScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('玉匣灵兆')),
+      appBar: AppBar(
+        title: const Text('玉匣灵兆'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_alert),
+            tooltip: '记录身体征兆',
+            onPressed: () => _showRecordOmen(context),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -231,5 +242,56 @@ class _YuxiajiOmenScreenState extends State<YuxiajiOmenScreen> {
         ),
       ),
     );
+  }
+
+  /// 身兆记录：写入一条「身兆记录」收藏，source 带入当前时辰。
+  void _showRecordOmen(BuildContext context) {
+    final nameC = TextEditingController();
+    final noteC = TextEditingController();
+    final nowLabel = shiChenLabel(_hourIndex);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            16, 16, 16, MediaQuery.of(ctx).viewInsets.bottom + 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('当前 $nowLabel',
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: nameC,
+              decoration: const InputDecoration(labelText: '征兆名称（如：左眼跳 / 耳鸣）'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: noteC,
+              maxLines: 4,
+              decoration: const InputDecoration(labelText: '当时感受 / 备注（可选）'),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () async {
+                final n = nameC.text.trim();
+                if (n.isEmpty) return;
+                await DatabaseHelper.instance.insertBookmark(Bookmark(
+                  title: n,
+                  content: noteC.text.trim(),
+                  category: '身兆记录',
+                  source: '玉匣灵兆·$nowLabel',
+                ));
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      ),
+    ).whenComplete(() {
+      nameC.dispose();
+      noteC.dispose();
+    });
   }
 }

@@ -150,7 +150,7 @@ class DiagnosisResult {
   bool get isCombined => combinedMeridian != null;
 
   String get displayMeridian {
-    if (isCombined) return '$meridian${combinedMeridian}合病';
+    if (isCombined) return '$meridian$combinedMeridian合病';
     return meridian;
   }
 

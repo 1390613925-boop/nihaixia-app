@@ -81,9 +81,9 @@ class BaZiPaipan {
 class _BaziChartBuild {
   final bazi.BaziChart chart;
   final String? timeOverride;
-  /// 是否命中早子时（校正后 00:00–01:00）：命中时日柱取次日，农历同步 +1 天。
-  final bool earlyZi;
-  _BaziChartBuild(this.chart, this.timeOverride, {this.earlyZi = false});
+  /// 农历基准日覆盖：开早晚子时时，农历按「校正后（真太阳时）时刻所在日」而非出生日计。
+  final DateTime? lunarBase;
+  _BaziChartBuild(this.chart, this.timeOverride, {this.lunarBase});
 }
 
 _BaziChartBuild _buildBaziChart(
@@ -112,6 +112,26 @@ _BaziChartBuild _buildBaziChart(
     // virtualTime = 引擎排盘基准时间（真太阳时开启时即校正后时刻）。
     effHour = probe.time.virtualTime.hour;
   }
+
+  // 不开早晚子时（子时归自然日）：真太阳时照常校正；但**仅当校正后落在子时**
+  // （23:00–24:00 或 00:00–01:00）时，该子时归「出生时钟日（自然日）」——
+  // 日柱 / 时柱 / 农历 全取出生日（不随真太阳时跨日回拨）。
+  // 校正后为非子时（如 22:xx 亥时），农历仍按校正后当日（与开一致）。
+  if (!ratHourMode) {
+    final bool ziShi = useTrueSolarTime && (effHour >= 23 || effHour < 1);
+    final chart = bazi.BaziChart.createBySolarDate(
+      clockTime: astro,
+      location: loc,
+      ratHourMode: RatHourMode.todayGan,
+      useTrueSolarTime: ziShi ? false : useTrueSolarTime,
+      gender: gender,
+    );
+    if (ziShi) return _BaziChartBuild(chart, null); // 出生日
+    final vt0 = chart.time.virtualTime;
+    return _BaziChartBuild(chart, null,
+        lunarBase: DateTime(vt0.year, vt0.month, vt0.day));
+  }
+
   if (ratHourMode && effHour >= 23) {
     // 晚子时：日柱用当天（todayGan），时柱用次日子时（noSplit）。
     final dayChart = bazi.BaziChart.createBySolarDate(
@@ -134,25 +154,14 @@ _BaziChartBuild _buildBaziChart(
       useTrueSolarTime: false,
       gender: gender,
     );
-    return _BaziChartBuild(dayChart, '${timeChart.bazi.time}');
+    // 晚子时农历按「校正后时刻所在日」计（vt 当日），而非出生日。
+    final vtDate = DateTime(vt.year, vt.month, vt.day);
+    return _BaziChartBuild(dayChart, '${timeChart.bazi.time}',
+        lunarBase: vtDate);
   }
-  if (ratHourMode && effHour < 1) {
-    // 早子时：bazi_core 的 noSplit 仅处理 23–24 点；00–01 点需将出生日 +1 天
-    // 再按 todayGan 排盘，方得「日柱次日、时柱子时」。
-    // 此处传「原始日 +1 天」由引擎再校正一次，等价于「校正后日期 +1 天」。
-    final nextSolar = solar.add(const Duration(days: 1));
-    final nextAstro = bazi.AstroDateTime(
-        nextSolar.year, nextSolar.month, nextSolar.day, nextSolar.hour, nextSolar.minute);
-    final chart = bazi.BaziChart.createBySolarDate(
-      clockTime: nextAstro,
-      location: loc,
-      ratHourMode: RatHourMode.todayGan,
-      useTrueSolarTime: useTrueSolarTime,
-      gender: gender,
-    );
-    return _BaziChartBuild(chart, null, earlyZi: true);
-  }
-  // 关闭开关，或 01:00–23:00：子时归自然日（todayGan）。
+  // 开早晚子时、00:00–23:00（含早子时）：子时归自然日（todayGan），
+  // 日柱 / 农历锚定「校正后（真太阳时）当日」。
+  // 早子时（00:00–01:00）本就属「当日」之子时，**不再顺延次日**（顺延会重复 +1 天）。
   final chart = bazi.BaziChart.createBySolarDate(
     clockTime: astro,
     location: loc,
@@ -160,7 +169,8 @@ _BaziChartBuild _buildBaziChart(
     useTrueSolarTime: useTrueSolarTime,
     gender: gender,
   );
-  return _BaziChartBuild(chart, null);
+  final vt = chart.time.virtualTime;
+  return _BaziChartBuild(chart, null, lunarBase: DateTime(vt.year, vt.month, vt.day));
 }
 
 /// 计算八字排盘。
@@ -172,10 +182,10 @@ _BaziChartBuild _buildBaziChart(
 /// [twelveStageMode] 长生十二神口径（火土同宫 / 水土同宫）；
 /// [ratHourMode] 区分早晚子时开关（含义同设置项「区分早晚子时」）：
 ///   - `false`（默认）：不区分，23:00–01:00 全部「子时归自然日」——日柱取当天、时柱取当日子时，不做偏移。
-///   - `true`：区分早晚子时，由出生时刻自动判定：
-///     · 晚子时（23:00 ≤ t < 24:00）：日柱维持**当天**（不变），时柱取**次日**子时干支；
-///     · 早子时（00:00 ≤ t < 01:00）：日柱取**次日**（公历 +1 天），时柱取新一天子时干支；
-///     · 01:00–23:00 不受影响，开关无作用。
+///   - `true`：区分早晚子时，日柱 / 农历一律锚定「校正后（真太阳时）当日」：
+///     · 晚子时（23:00 ≤ t < 24:00）：日柱取校正后当日，时柱取**次日**子时干支；
+///     · 早子时（00:00 ≤ t < 01:00）：日柱取校正后当日（**不顺延次日**），时柱取当日子时干支；
+///     · 01:00–23:00：日柱取校正后当日，开关与 `false` 在无跨日校正时结果一致。
 /// 四柱由 [bazi.BaziChart.createBySolarDate] 算出（与大运同源），再包装为 [ZiweiBaZi]。
 BaZiPaipan computeBaZiPaipan(
   DateTime solar, {
@@ -219,9 +229,9 @@ BaZiPaipan computeBaZiPaipan(
   final relations = detectBaziRelations(zhis);
   final stages = twelveStagesForPillars(dayGan, zhis, mode: twelveStageMode);
   final analysis = analyzeBaZi(gans: gans, zhis: zhis);
-  // 出生农历：取出生日正午，与黄历 / 紫微排盘同口径（见 lunar_almanac_service / ziwei_engine）。
-  // 早子时日柱取次日，农历基准日随之 +1 天，保证与日柱、与紫微屏一致。
-  final lunarBase = built.earlyZi ? solar.add(const Duration(days: 1)) : solar;
+  // 出生农历：取基准日正午，与黄历 / 紫微排盘同口径（见 lunar_almanac_service / ziwei_engine）。
+  // 基准日：开早晚子时 = 校正后（真太阳时）当日（built.lunarBase）；不开 = 出生日。
+  final lunarBase = built.lunarBase ?? solar;
   final lunar = LunarDate.fromSolar(
     AstroDateTime(lunarBase.year, lunarBase.month, lunarBase.day, 12, 0, 0),
   );
@@ -284,18 +294,21 @@ class BaZiFortune {
 /// （阳男阴女顺排、阴男阳女逆排，见 bazi_core fortune.dart）。
 /// [location] 语义同 [computeBaZiPaipan]；`null` 时按默认东经 120°。
 /// [ratHourMode] 区分早晚子时开关，与四柱排盘保持一致（含义见 [computeBaZiPaipan]）。
+/// [useTrueSolarTime] 真太阳时校准开关，与四柱排盘保持一致
+/// （含义见 [computeBaZiPaipan]）；默认 true，不影响既有调用点行为。
 BaZiFortune computeBaZiFortune(
   DateTime solar, {
   required bool isMale,
   Location? location,
   bool ratHourMode = false,
+  bool useTrueSolarTime = true,
   int decadeCount = 8,
 }) {
   final chart = _buildBaziChart(
     solar,
     ratHourMode,
     location,
-    true,
+    useTrueSolarTime,
     isMale ? Gender.male : Gender.female,
   ).chart;
   final fortune = bazi.Fortune.createByBaziChart(chart);

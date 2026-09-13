@@ -139,74 +139,18 @@ class _ZiweiChartScreenState extends State<ZiweiChartScreen> {
   }
 
   /// 打开中文城市搜索弹窗，返回选中的城市（取消返回 null）。
+  /// 弹窗内可切「国内 / 国外」，两套数据分开加载、分开搜索（默认国内）。
   Future<CityLocation?> _openCityPicker() async {
-    final all = await CityLocationService.load();
-    return _buildCityDialog(all);
+    final domestic = await CityLocationService.load(PlaceScope.domestic);
+    return _buildCityDialog(domestic);
   }
 
   /// 同步构建城市搜索弹窗（无 await gap，安全使用 context）。
-  Future<CityLocation?> _buildCityDialog(List<CityLocation> all) {
-    final screenH = MediaQuery.of(context).size.height;
-    final queryCtrl = TextEditingController();
-    List<CityLocation> results = CityLocationService.searchIn(all, '', 80);
+  /// 国外数据懒加载：打开时只解析国内，切到「国外」才加载 world 列表。
+  Future<CityLocation?> _buildCityDialog(List<CityLocation> domestic) {
     return showDialog<CityLocation>(
       context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setSt) {
-            return AlertDialog(
-              title: const Text('选择出生城市'),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: screenH * 0.7,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: queryCtrl,
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.search),
-                        labelText: '搜索城市 / 省份',
-                        hintText: '如 北京、上海、广州、浙江、乌鲁木齐',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (q) => setSt(
-                        () => results = CityLocationService.searchIn(all, q, 80),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: results.length,
-                        itemBuilder: (_, i) {
-                          final c = results[i];
-                          return ListTile(
-                            dense: true,
-                            title: Text(c.displayName),
-                            subtitle: Text(
-                              '${c.lng.toStringAsFixed(2)}°E, '
-                              '${c.lat.toStringAsFixed(2)}°N',
-                            ),
-                            onTap: () => Navigator.pop(ctx, c),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('取消'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => _CitySearchDialog(domestic: domestic),
     );
   }
 
@@ -296,35 +240,9 @@ class _ZiweiChartScreenState extends State<ZiweiChartScreen> {
     final genderLabel = _isMale ? '男' : '女';
     final defaultName =
         '命盘 $_year-${_month.toString().padLeft(2, '0')}-${_day.toString().padLeft(2, '0')} $genderLabel';
-    final nameCtrl = TextEditingController(text: defaultName);
-
     final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('添加到命盘库'),
-        content: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-            labelText: '命盘名称',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final v = nameCtrl.text.trim();
-              Navigator.pop(ctx, v.isEmpty ? defaultName : v);
-            },
-            child: const Text('保存'),
-          ),
-        ],
-      ),
+      builder: (_) => _ZiweiSaveNameDialog(defaultName: defaultName),
     );
     if (name == null) return;
 
@@ -590,7 +508,7 @@ class _ZiweiChartScreenState extends State<ZiweiChartScreen> {
               ),
               subtitle: Text(
                 '默认关闭：子时归自然日（日柱当天）。开启后 23:00-24:00 为晚子时'
-                '（日柱当天、时柱次日子时），00:00-01:00 为早子时（日柱次日）。',
+                '（日柱当天、时柱次日子时），00:00-01:00 为早子时（属当日子时、日柱当天）。',
                 style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
               ),
               value: _distinguishZiShi,
@@ -661,7 +579,7 @@ class _ZiweiChartScreenState extends State<ZiweiChartScreen> {
                         });
                         // 同步最近出生地点，供八字排盘共用真太阳时校正。
                         SettingsRepository.instance
-                            .setLastLocation(city.name, city.lng, city.lat);
+                            .setLastLocation(city.label, city.lng, city.lat);
                       }
                     },
                     icon: const Icon(Icons.location_city_outlined),
@@ -1672,6 +1590,167 @@ class _ZiweiChartScreenState extends State<ZiweiChartScreen> {
       default:
         return context.colors.onSurface;
     }
+  }
+}
+
+/// 城市搜索弹窗（国内/国外两套数据分开加载、分开搜索）。
+///
+/// 自持 [TextEditingController] 与搜索状态，controller 在 [State.dispose] 中销毁——
+/// dispose 晚于路由退场动画，避免退场期间误用已销毁的 controller。
+/// 选中城市通过 `Navigator.pop(context, city)` 返回。
+class _CitySearchDialog extends StatefulWidget {
+  final List<CityLocation> domestic;
+
+  const _CitySearchDialog({required this.domestic});
+
+  @override
+  State<_CitySearchDialog> createState() => _CitySearchDialogState();
+}
+
+class _CitySearchDialogState extends State<_CitySearchDialog> {
+  final TextEditingController _queryCtrl = TextEditingController();
+  bool _isDomestic = true; // 默认国内，不持久化
+  List<CityLocation>? _world; // 懒加载缓存
+  int _searchToken = 0; // 请求令牌：异步返回只认最新，防止快速切 scope 串结果
+  late List<CityLocation> _results =
+      CityLocationService.searchIn(widget.domestic, '', 80);
+
+  @override
+  void dispose() {
+    _queryCtrl.dispose();
+    super.dispose();
+  }
+
+  // 按当前 scope + 关键字重搜（国外懒加载）；异步回来若非最新令牌则丢弃。
+  Future<void> _runSearch(String q) async {
+    final token = ++_searchToken;
+    if (_isDomestic) {
+      setState(() =>
+          _results = CityLocationService.searchIn(widget.domestic, q, 80));
+      return;
+    }
+    final w = _world ??= await CityLocationService.load(PlaceScope.world);
+    if (!mounted || token != _searchToken) return;
+    setState(() => _results = CityLocationService.searchIn(w, q, 80));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenH = MediaQuery.of(context).size.height;
+    return AlertDialog(
+      title: const Text('选择出生城市'),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: screenH * 0.7,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: true, label: Text('国内')),
+                ButtonSegment(value: false, label: Text('国外')),
+              ],
+              selected: {_isDomestic},
+              onSelectionChanged: (s) {
+                setState(() => _isDomestic = s.first);
+                _runSearch(_queryCtrl.text); // 切换后按当前关键字重搜
+              },
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _queryCtrl,
+              autofocus: true,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: '搜索城市 / 省份 / 英文名',
+                hintText: '如 北京、上海、广州、浙江、Tokyo',
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              onChanged: _runSearch,
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _results.length,
+                itemBuilder: (_, i) {
+                  final c = _results[i];
+                  return ListTile(
+                    dense: true,
+                    title: Text(c.displayName),
+                    subtitle: Text(
+                      '${c.lng.toStringAsFixed(2)}°E, '
+                      '${c.lat.toStringAsFixed(2)}°N',
+                    ),
+                    onTap: () => Navigator.pop(context, c),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+      ],
+    );
+  }
+}
+
+/// 「添加到命盘库」名称输入弹窗。
+///
+/// [TextEditingController] 由本 State 持有并在 [State.dispose] 中销毁——
+/// 该 dispose 晚于路由退场动画，避免退场期间误用已销毁的 controller。
+/// 用户输入的名字通过 `Navigator.pop(context, name)` 原样返回给调用方。
+class _ZiweiSaveNameDialog extends StatefulWidget {
+  final String defaultName;
+
+  const _ZiweiSaveNameDialog({required this.defaultName});
+
+  @override
+  State<_ZiweiSaveNameDialog> createState() => _ZiweiSaveNameDialogState();
+}
+
+class _ZiweiSaveNameDialogState extends State<_ZiweiSaveNameDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.defaultName);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('添加到命盘库'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(
+          labelText: '命盘名称',
+          border: OutlineInputBorder(),
+        ),
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final v = _controller.text.trim();
+            Navigator.pop(context, v.isEmpty ? widget.defaultName : v);
+          },
+          child: const Text('保存'),
+        ),
+      ],
+    );
   }
 }
 

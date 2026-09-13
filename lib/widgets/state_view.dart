@@ -25,16 +25,15 @@ class StateView extends StatelessWidget {
   final bool fullScreen;
 
   const StateView._({
-    Key? key,
-    required ViewState state,
+    super.key,
+    required this._state,
     this.title,
     this.hint,
     this.icon,
     this.message,
     this.onRetry,
     this.fullScreen = true,
-  })  : _state = state,
-        super(key: key);
+  });
 
   /// 加载中（无文字）。
   const StateView.loading({Key? key, bool fullScreen = true})

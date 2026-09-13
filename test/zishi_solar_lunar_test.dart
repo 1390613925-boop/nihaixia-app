@@ -6,9 +6,12 @@ import 'package:nihaisha_app/services/ziwei_engine.dart';
 
 /// 早晚子时 × 真太阳时 交叉组合回归（P0 修复验证）。
 ///
-/// 修复前两处缺陷：
-/// 1. 早子时（校正后 00:00–01:00）八字农历未 +1 天，与紫微 / 日柱不同步；
-/// 2. 早晚子时判定用未校正的原始小时，真太阳时开启时日柱差一天、时柱落到亥时。
+/// 现行口径：
+/// 1. 早子时（校正后 00:00–01:00）属「当日之子时」，日柱不顺延次日、农历亦取当日；
+///    此时「区分早晚子时」开/关对结果无差异；
+/// 2. 晚子时（校正后 23:00–24:00）为日柱当天、时柱取次日子时；
+/// 3. 早晚子时判定须先做真太阳时校正、再用校正后的小时判定，
+///    否则日柱会差一天、时柱落到亥时。
 void main() {
   /// 同时返回八字与紫微的四柱（日、时）与农历。
   ({String day, String time, String lunar}) baziOf(
@@ -48,38 +51,34 @@ void main() {
       (
         label: '① 2024-02-10 00:30',
         solar: DateTime(2024, 2, 10, 0, 30),
-        expectLunar: '甲辰（2024）年正月初二',
-        expectDay: '乙巳',
+        expectLunar: '甲辰（2024）年正月初一',
+        expectDay: '甲辰',
+        expectTime: '甲子',
       ),
       (
         label: '⑨ 2023-01-22 00:30',
         solar: DateTime(2023, 1, 22, 0, 30),
-        expectLunar: '癸卯（2023）年正月初二',
-        expectDay: '辛巳',
+        expectLunar: '癸卯（2023）年正月初一',
+        expectDay: '庚辰',
+        expectTime: '丙子',
       ),
     ]) {
-      test('${c.label} 子时开 → 八字农历 = 紫微农历 = ${c.expectLunar}', () {
-        final bz = baziOf(c.solar, lon: 120, rat: true, tst: false);
-        final zw = ziweiOf(c.solar, lon: 120, rat: true, tst: false);
-        expect(bz.day, c.expectDay, reason: '早子时日柱应取次日');
-        expect(bz.lunar, c.expectLunar);
-        expect(zw.lunar, c.expectLunar);
-        expect(bz.lunar, zw.lunar, reason: '八字与紫微农历必须一致');
-      });
-
-      test('${c.label} 子时开 + 真太阳开 → 两屏仍一致', () {
-        final bz = baziOf(c.solar, lon: 120, rat: true, tst: true);
-        final zw = ziweiOf(c.solar, lon: 120, rat: true, tst: true);
-        expect(bz.lunar, zw.lunar);
-        expect(bz.day, c.expectDay);
-      });
-
-      test('${c.label} 子时关 → 农历保持原始日（正月初一）', () {
-        final bz = baziOf(c.solar, lon: 120, rat: false, tst: false);
-        final zw = ziweiOf(c.solar, lon: 120, rat: false, tst: false);
-        expect(bz.lunar, c.expectLunar.replaceAll('初二', '初一'));
-        expect(zw.lunar, bz.lunar);
-      });
+      for (final rat in [false, true]) {
+        for (final tst in [false, true]) {
+          test(
+              '${c.label} 子时${rat ? '开' : '关'} × 真太阳${tst ? '开' : '关'} '
+              '→ 日柱当日 ${c.expectDay} / ${c.expectLunar}', () {
+            final bz = baziOf(c.solar, lon: 120, rat: rat, tst: tst);
+            final zw = ziweiOf(c.solar, lon: 120, rat: rat, tst: tst);
+            // 早子时属当日子时：日柱、农历均取「当日」，开/关无差异
+            expect(bz.day, c.expectDay, reason: '早子时日柱取当日（不顺延次日）');
+            expect(bz.time, c.expectTime);
+            expect(bz.lunar, c.expectLunar);
+            expect(zw.day, bz.day, reason: '八字与紫微日柱必须一致');
+            expect(zw.lunar, bz.lunar, reason: '八字与紫微农历必须一致');
+          });
+        }
+      }
     }
   });
 
@@ -109,15 +108,17 @@ void main() {
       expect(bz.lunar, zw.lunar);
     });
 
-    test('④ 2024-02-09 23:30 @E140 子时开+真太阳 → 乙巳日 丙子时', () {
+    test('④ 2024-02-09 23:30 @E140 子时开+真太阳 → 甲辰日 甲子时 / 正月初一', () {
       final s = DateTime(2024, 2, 9, 23, 30);
       final bz = baziOf(s, lon: 140, rat: true, tst: true);
       final zw = ziweiOf(s, lon: 140, rat: true, tst: true);
-      // 校正后 ≈ 2/10 00:5x → 早子时：日柱次日(2/11 乙巳)、时柱子时(丙子)
-      expect(bz.day, '乙巳');
-      expect(bz.time, '丙子');
-      expect(zw.day, '乙巳');
-      expect(zw.time, '丙子');
+      // E140 校正量 ≈ +80min → 2/10 00:50 → 早子时：日柱当日(2/10 甲辰)、
+      // 时柱当日子时（甲辰日遁子 = 甲子），农历取当日正月初一
+      expect(bz.day, '甲辰');
+      expect(bz.time, '甲子');
+      expect(zw.day, '甲辰');
+      expect(zw.time, '甲子');
+      expect(bz.lunar, '甲辰（2024）年正月初一');
 
       // 同一时刻 @E120：校正后 2/9 23:15 仍属晚子时 → 日柱当天、时柱次日子时
       final bz120 = baziOf(s, lon: 120, rat: true, tst: true);

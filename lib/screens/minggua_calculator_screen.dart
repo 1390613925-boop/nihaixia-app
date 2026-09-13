@@ -20,25 +20,20 @@ class MingGuaCalculatorScreen extends StatefulWidget {
 }
 
 class _MingGuaCalculatorScreenState extends State<MingGuaCalculatorScreen> {
-  static const _shiChen = [
-    ('子时', 0, '23:00–01:00'),
-    ('丑时', 2, '01:00–03:00'),
-    ('寅时', 4, '03:00–05:00'),
-    ('卯时', 6, '05:00–07:00'),
-    ('辰时', 8, '07:00–09:00'),
-    ('巳时', 10, '09:00–11:00'),
-    ('午时', 12, '11:00–13:00'),
-    ('未时', 14, '13:00–15:00'),
-    ('申时', 16, '15:00–17:00'),
-    ('酉时', 18, '17:00–19:00'),
-    ('戌时', 20, '19:00–21:00'),
-    ('亥时', 22, '21:00–23:00'),
+  /// 十二时辰名（子…亥），索引与 [_shiChenIndexOfHour] 一致。
+  static const List<String> _shiChenNames = [
+    '子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥',
   ];
+
+  /// 由出生小时(0-23)推导时辰索引（子=0…亥=11）。
+  /// 与八字/紫微/称骨/关煞/受生债/黄帝四季 同一口径（23、0 时归子）。
+  int _shiChenIndexOfHour(int hour) => ((hour.clamp(0, 23) + 1) ~/ 2) % 12;
 
   int _year = 1995;
   int _month = 8;
   int _day = 16;
-  int _shiChenIndex = 5;
+  int _birthHour = 10; // 默认巳时（旧 _shiChenIndex=5 即 10:00），保持默认等价
+  int _birthMinute = 0;
   bool _isMale = true;
 
   MingGuaResult? _result;
@@ -56,7 +51,7 @@ class _MingGuaCalculatorScreenState extends State<MingGuaCalculatorScreen> {
     try {
       final ruleset = ConfigLoader.getDefault();
       final date = ZiweiDate.fromSolar(
-        AstroDateTime(_year, _month, _day, _shiChen[_shiChenIndex].$2, 0),
+        AstroDateTime(_year, _month, _day, _birthHour, _birthMinute),
         gender: _isMale ? Gender.male : Gender.female,
         options: ruleset.calendarOptions,
         useTrueSolarTime: true,
@@ -253,29 +248,52 @@ class _MingGuaCalculatorScreenState extends State<MingGuaCalculatorScreen> {
                 Expanded(
                   flex: 2,
                   child: _Dropdown(
-                    label: '时辰',
-                    value: _shiChenIndex,
+                    label: '时',
+                    value: _birthHour,
                     items: [
-                      for (int i = 0; i < _shiChen.length; i++)
+                      for (int h = 0; h <= 23; h++)
                         DropdownMenuItem(
-                          value: i,
-                          child: Text('${_shiChen[i].$1} (${_shiChen[i].$3})'),
+                          value: h,
+                          child: Text(h.toString().padLeft(2, '0')),
                         ),
                     ],
-                    onChanged: (v) => setState(() => _shiChenIndex = v!),
+                    onChanged: (v) => setState(() => _birthHour = v!),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(value: true, label: Text('男')),
-                      ButtonSegment(value: false, label: Text('女')),
+                  flex: 2,
+                  child: _Dropdown(
+                    label: '分',
+                    value: _birthMinute,
+                    items: [
+                      for (int m = 0; m <= 59; m++)
+                        DropdownMenuItem(
+                          value: m,
+                          child: Text(m.toString().padLeft(2, '0')),
+                        ),
                     ],
-                    selected: {_isMale},
-                    onSelectionChanged: (s) =>
-                        setState(() => _isMale = s.first),
+                    onChanged: (v) => setState(() => _birthMinute = v!),
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _chip(
+                  cs,
+                  '时辰：${_shiChenNames[_shiChenIndexOfHour(_birthHour)]}时',
+                  cs.primary,
+                ),
+                const Spacer(),
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: true, label: Text('男')),
+                    ButtonSegment(value: false, label: Text('女')),
+                  ],
+                  selected: {_isMale},
+                  onSelectionChanged: (s) => setState(() => _isMale = s.first),
                 ),
               ],
             ),
