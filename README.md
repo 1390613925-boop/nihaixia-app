@@ -100,6 +100,12 @@
 
 从左到右：① **知识库首页** —— 顶部「六经 / 方剂 / 本草 / 针灸 / 内经 / 搜索」六大入口，「当前节气」卡直显节气名、距下一节气天数、太阳黄经与三候，下方「黄帝内经·速查」脏象 / 望诊 / 脉诊三入口一览。 ② **内经条目 · 十维度** —— 52 条结构化条目按 10 个维度（脏象 / 望诊 / 脉诊 / 病因病机 / 经络循行 / 气血津液 / 辨证体系 / 治则方药 / 病证举例 / 误治宜忌）检索，支持六字段搜索（标题 / 原文 / 出处 / 白话 / 倪师解）、按篇名检索与标签交叉筛选；每条卡片显式标注篇名出处（如《素问·灵兰秘典论》第一节）。 ③ **节气养生详情** —— 24 节气逐条给出气候 / 起居 / 饮食 / 穴位 / 不适五类养生要点，并附「倪师解析」卡片，非原文直引处统一标注【推断】，一眼可分「经典原文 vs 解读」。
 
+**v1.11.23 伤寒论 / 金匮要略 条文级阅读库 · 方剂⇄条文双向联动**
+
+![v1.11.23 伤寒金匮条文级阅读库](docs/images/screenshot_v1123_shanghan_jingui.webp)
+
+从左到右：① **知识库新增「伤寒金匮」Tab** —— 伤寒论 380 篇（条文级 + 五经概述）与金匮要略 453 篇两个入口。 ② **伤寒论 · 阅读库** —— 23 大模块拆到条文级逐条排列（太阳·总纲 / 太阳病中风(桂枝汤证) / 太阳病伤寒(麻黄汤证) / 太阳病传经判断 ……）。 ③ **方剂「见于经典」** —— 以桂枝汤为例，分「伤寒论 / 金匮要略」两组列出**专门介绍该方**的条文，点按直达原文。 ④ **金匮要略 · 阅读库** —— 25 篇杂病按条文排列（藏府经络先后病、痉湿暍病、疟病 ……）。正文里的方剂名 / 药材名一点即跳对应详情，经方正文与方剂·药物首次**双向联动**。
+
 </div>
 
 ---
@@ -119,6 +125,7 @@
 | ⏰ **子午流注取穴** | 输入时间自动推算开穴 | 361 穴 |
 | 🔧 **经方剂量换算** | 古代度量衡（两/升/铢）→ 现代克数 | — |
 | 📖 **黄帝内经** | 脏象 12 卡 + 望诊（五色/眼诊）+ 脉诊（平人/死脉）+ 73 篇阅读库 + 全文搜索；新增「结构化条目检索」52 条 / 10 维度，原文·出处·白话·倪师解读四字段分离，支持六字段搜索 + 维度 + 标签交叉检索 | 73 篇 + 52 条 |
+| 📜 **伤寒论 · 金匮要略 条文库** | 伤寒论 380 篇 + 金匮要略 453 篇拆到条文级逐条阅读；正文方剂/药材名一点即跳详情，方剂详情「见于经典」反向标注出处条文 | 833 条 |
 | 📚 **倪师医案库** | 1257 例检索 + 闭门课重症临床模块，医案 ↔ 方剂双向联动 | 1257 例 |
 | 🎲 **六爻铜钱摇卦** | 三枚铜钱逐爻摇卦，多动爻自动变卦 | 民俗参考 |
 | 📜 **易经六十四卦** | 时间/数字/手选起卦，解本卦·动爻·变卦·互卦，集成人间道 64 卦讲课文稿 | 64 卦 |
@@ -141,11 +148,11 @@
 
 > **汉唐中医 nihaixia‑app**
 > 完全离线｜无需联网｜无需注册｜Android 6.0+
-> 通用版 APK 约 69MB，分架构版 25–28MB
+> 通用版 APK 约 68MB，分架构版 25–28MB
 > 自 V1.11.9 起由 GitHub Actions 自动构建发布，推送 `v*` tag 即出包
-> **最后更新：2026-09-10（v1.11.19）**
+> **最后更新：2026-09-14（v1.11.23）**
 
-### 📥 方式一：下载预编译 APK（V1.11.19）
+### 📥 方式一：下载预编译 APK（V1.11.23）
 
 > ### ⚠️ 升级须知：签名密钥已统一，通常可直接覆盖安装
 >
@@ -162,23 +169,24 @@
 
 <div align="left">
 
-[![📦 通用版 APK](https://img.shields.io/badge/📦%20通用版-安卓安装包‑3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.19/app-release.apk)
+[![📦 通用版 APK](https://img.shields.io/badge/📦%20通用版-安卓安装包‑3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.23/app-release.apk)
 &nbsp;&nbsp;
-[![📦 arm64‑v8a APK](https://img.shields.io/badge/📦%20arm64‑v8a-安卓安装包‑0284CC?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.19/app-arm64-v8a-release.apk)
+[![📦 arm64‑v8a APK](https://img.shields.io/badge/📦%20arm64‑v8a-安卓安装包‑0284CC?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.23/app-arm64-v8a-release.apk)
 &nbsp;&nbsp;
-[![📦 armeabi‑v7a APK](https://img.shields.io/badge/📦%20armeabi‑v7a-安卓安装包‑9C27B0?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.19/app-armeabi-v7a-release.apk)
+[![📦 armeabi‑v7a APK](https://img.shields.io/badge/📦%20armeabi‑v7a-安卓安装包‑9C27B0?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.23/app-armeabi-v7a-release.apk)
 &nbsp;&nbsp;
-[![📦 x86_64(虚拟机)](https://img.shields.io/badge/📦%20x86_64(虚拟机)-安卓安装包‑1565C0?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.19/app-x86_64-release.apk)
+[![📦 x86_64(虚拟机)](https://img.shields.io/badge/📦%20x86_64(虚拟机)-安卓安装包‑1565C0?style=for-the-badge&logo=android&logoColor=white)](https://ghproxy.net/https://github.com/jangviktor-web/nihaixia-app/releases/download/v1.11.23/app-x86_64-release.apk)
 
 </div>
 
 | 安装包 | 大小 | 适用说明 |
 |---|---|---|
-| 通用版 `app-release.apk` | 62.5MB | 全CPU架构，绝大多数安卓设备直接选这个 |
-| arm64‑v8a `app‑arm64‑v8a‑release.apk` | 23.4MB | 新款64位安卓手机，体积更小 |
-| armeabi‑v7a `app‑armeabi‑v7a‑release.apk` | 21.4MB | 老旧32位安卓设备 |
-| x86_64 `app‑x86_64‑release.apk` | 24.9MB | 安卓虚拟机、模拟器使用 |
+| 通用版 `app-release.apk` | 67.9MB | 全CPU架构，绝大多数安卓设备直接选这个 |
+| arm64‑v8a `app‑arm64‑v8a‑release.apk` | 27.0MB | 新款64位安卓手机，体积更小 |
+| armeabi‑v7a `app‑armeabi‑v7a‑release.apk` | 25.1MB | 老旧32位安卓设备 |
+| x86_64 `app‑x86_64‑release.apk` | 28.4MB | 安卓虚拟机、模拟器使用 |
 
+> **V1.11.23 伤寒论 / 金匮要略 条文级阅读库 · 方剂⇄条文双向联动**：知识库新增「伤寒金匮」Tab，伤寒论 380 篇、金匮要略 453 篇由「一章一个大文件」拆到**条文级**逐条阅读；正文里的方剂名/药材名一点即跳详情，方剂详情「见于经典」反向列出**专门介绍该方**的伤寒论/金匮条文；同时修复 Markdown 阅读页正文链接点击无反应。详见 [Release Notes](release_notes/v1.11.23.md)。
 > **V1.11.22 黄历神诞检索 · 记梦/身兆记录 + 民俗命理工具集**：自 v1.11.19 起三重增强——工具箱入驻「袁天罡称骨 / 受生债查询 / 轩辕黄帝四季歌」三大民俗参考，并按中医/玄学区划清晰分区（修复日期选择器英文回退）；黄历与周公解梦/玉匣灵兆新增「神诞检索 / 记梦 / 身兆记录」随身入口，全部复用 Bookmark 体系、零新表零迁移。详见 [Release Notes](release_notes/v1.11.22.md)。
 > **V1.11.19 内经结构化条目检索 · 深色模式正文修复 · 早晚子时农历校正**：新增「《黄帝内经》结构化条目检索」页（52 条 / 10 维度，原文·出处·白话·倪师解读四字段分离，六字段搜索 + 维度 + 标签交叉检索）；修复 Markdown 阅读页深色模式白字压浅蓝底不可读（对比度 1.09→9.50）；修复早晚子时 × 真太阳时下农历落后一天、时柱落亥时。详见 [Release Notes](release_notes/v1.11.19.md)。
 > **V1.11.17 周公解梦 · 小儿关煞 · 早晚子时校正约束落地**：新增「周公解梦」模块（412 条梦境民俗解读，关键词/分类检索，吉凶标注）；新增「小儿关煞」模块（36 关 + 18 扩展煞，支持测算与百科检索，附民俗文化参考免责声明）；紫微排盘早晚子时校正重构，原始出生时间只读、农历显示跟随校正后的干支。详见 [Release Notes](release_notes/v1.11.17.md)。

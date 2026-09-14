@@ -1,6 +1,20 @@
 {
   "changelog": [
     {
+      "version": "1.11.23",
+      "date": "2026-09-14",
+      "title": "方剂→经典跳转精度收紧至「中间档」+ 修复正文方剂·药材链接点击无反应",
+      "changes": [
+        "修复闭门课 / 伤寒金匮 / 内经 等正文里的方剂·药材链接点击无反应：根因是 flutter_markdown 会把 onTapLink 的 href 做 percent-encoding（formula://四逆汤 → formula://%E5%9B%9B…），旧代码未解码导致查库恒 null；新增 decodeMarkdownHref 解码后再查，一处修复覆盖全部 Markdown 阅读页（闭门课/伤寒金匮/内经搜索/方剂详情「见于经典」/药物关联）",
+        "新增回归测试 test/markdown_link_href_test.dart（3 例：解码正确 / 编码 href 解码后命中方剂·药材 / 未解码必失败）全过",
+        "方剂详情「见于经典」跳转精度收紧至中间档：只保留①方证标题即该方，或②条文原文中该方之后紧接「主之」的条文；舍去「宜/与/属/可/当」等弱信号，避免把对比/加减方条文也算进来",
+        "伤寒论侧实测：桂枝汤 20→12 条、小柴胡汤 10→5 条、四逆汤 ~10→9 条；金匮侧同规则（453 条已拆好），如桂枝汤 2 条、小柴胡汤 4 条",
+        "最长优先匹配：全部方名按长度降序拼成正则，避免「四逆汤」误命中「茯苓四逆汤」「通脉四逆汤」等长名；单元测试覆盖子串/引号包裹/误治排除/讲解小标题不误命中",
+        "资产加载改为伤寒380+金匮453 两本书各自 Future.wait 并行读取，避免首次打开方剂详情卡顿",
+        "test/formula_intro_test.dart(6)+test/classic_lecture_assets_test.dart(3) + markdown_link_href_test.dart(3) 全过；flutter analyze lib 0 error"
+      ]
+    },
+    {
       "version": "1.11.22",
       "date": "2026-09-13",
       "title": "黄历神诞检索入口 + 周公解梦记梦/玉匣灵兆身兆记录",

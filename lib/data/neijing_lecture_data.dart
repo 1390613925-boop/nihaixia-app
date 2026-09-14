@@ -2,9 +2,14 @@
 /// 72 篇正文 + 前言；原文第 25、66-74 篇原稿未收录，不强补。
 library;
 
-class NeiJingLecture {
+import 'classic_lecture_data.dart';
+
+class NeiJingLecture implements LectureIndex {
+  @override
   final int seq; // 0=前言, 1-81=篇序
+  @override
   final String name;
+  @override
   final String asset;
 
   const NeiJingLecture({

@@ -8,6 +8,20 @@ import '../data/herb_repository.dart';
 import 'formula_detail_screen.dart';
 import 'herb_detail_screen.dart';
 
+/// 解码 flutter_markdown 传给 `onTapLink` 的 href。
+///
+/// flutter_markdown 会对链接目标做 percent-encoding：正文里的
+/// `[四逆汤](formula://四逆汤)` 传到 `onTapLink` 时变成
+/// `formula://%E5%9B%9B%E9%80%86%E6%B1%A4`。不在此解码，查库用的就是编码串，
+/// 永远命中不到 → 点击「无任何反应」。
+String decodeMarkdownHref(String href) {
+  try {
+    return Uri.decodeComponent(href);
+  } catch (_) {
+    return href; // 非法 % 序列：原样返回，不因一个坏链接崩掉整页
+  }
+}
+
 /// 通用 Markdown 原文阅读页（加载 assets 资源渲染）。
 /// 用于倪师《天纪》讲义/案例等原文展示，内容属传统文化参考。
 ///
@@ -174,7 +188,7 @@ class _MarkdownDocScreenState extends State<MarkdownDocScreen> {
   void _onTapLink(String? href) {
     if (href == null) return;
     if (href.startsWith('formula://')) {
-      final name = href.substring('formula://'.length);
+      final name = decodeMarkdownHref(href.substring('formula://'.length));
       final formula = FormulaRepository.getByName(name);
       if (formula != null && mounted) {
         Navigator.push(
@@ -184,7 +198,7 @@ class _MarkdownDocScreenState extends State<MarkdownDocScreen> {
         );
       }
     } else if (href.startsWith('herb://')) {
-      final name = href.substring('herb://'.length);
+      final name = decodeMarkdownHref(href.substring('herb://'.length));
       // 精确 + 别名归一（无模糊兜底），避免「柴胡」误跳到含柴胡的方剂。
       final herb = HerbRepository.getExactByName(name);
       if (herb != null && mounted) {
