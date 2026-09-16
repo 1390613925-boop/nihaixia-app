@@ -51,9 +51,9 @@ jobs:
           grep -q "岐黄经方" lib/main.dart
           grep -q "isMinifyEnabled = true" android/app/build.gradle.kts
           grep -q "isShrinkResources = true" android/app/build.gradle.kts
-          if ! git diff --quiet upstream/master -- assets/data; then
+          if ! git diff --quiet upstream/master -- assets/data ':(exclude)assets/data/changelog.json'; then
             echo "assets/data differs from upstream; stopping to prevent silent data drift."
-            git diff --name-status upstream/master -- assets/data
+            git diff --name-status upstream/master -- assets/data ':(exclude)assets/data/changelog.json'
             exit 1
           fi
           flutter pub get

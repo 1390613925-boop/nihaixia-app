@@ -24,3 +24,4 @@ android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 android/app/src/main/res/values/colors.xml
 assets/branding
+assets/data/changelog.json
