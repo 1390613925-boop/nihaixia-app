@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'data/acupuncture_repository.dart';
@@ -34,8 +36,35 @@ class NiHaishaApp extends StatefulWidget {
   State<NiHaishaApp> createState() => _NiHaishaAppState();
 }
 
-class _NiHaishaAppState extends State<NiHaishaApp> {
+class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
   late Future<LicenseInfo> _license = LicenseService.current();
+  Timer? _licenseTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _licenseTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _refreshLicense(),
+    );
+  }
+
+  void _refreshLicense() {
+    if (mounted) setState(() => _license = LicenseService.current());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshLicense();
+  }
+
+  @override
+  void dispose() {
+    _licenseTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +102,7 @@ class _NiHaishaAppState extends State<NiHaishaApp> {
               }
               final child = snapshot.data!.isValid
                   ? HomeScreen(textScaleFactor: settings.textScaleFactor)
-                  : ActivationScreen(
-                      onActivated: (_) =>
-                          setState(() => _license = LicenseService.current()),
-                    );
+                  : ActivationScreen(onActivated: (_) => _refreshLicense());
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
                   textScaler: TextScaler.linear(settings.textScaleFactor),

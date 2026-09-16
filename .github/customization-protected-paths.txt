@@ -3,6 +3,7 @@
 # gate, Qihuang branding, own update feed, release signing and R8 settings.
 lib/services/license_service.dart
 lib/screens/activation_screen.dart
+lib/screens/settings_screen.dart
 lib/main.dart
 lib/services/update_service.dart
 test/license_service_test.dart

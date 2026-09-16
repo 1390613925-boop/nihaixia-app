@@ -22,6 +22,24 @@ class LicenseInfo {
 
   bool get isValid => result == LicenseResult.valid;
 
+  int? get remainingDays => remainingDaysAt(DateTime.now());
+
+  int? remainingDaysAt(DateTime now) {
+    if (expiresAt == null) return null;
+    final today = DateTime(now.year, now.month, now.day);
+    return expiresAt!.difference(today).inDays;
+  }
+
+  String get remainingLabel => remainingLabelAt(DateTime.now());
+
+  String remainingLabelAt(DateTime now) {
+    final days = remainingDaysAt(now);
+    if (days == null) return '未激活';
+    if (days < 0) return '已过期';
+    if (days == 0) return '今日到期（剩余不到1天）';
+    return '剩余 $days 天';
+  }
+
   String get expiryLabel => expiresAt == null
       ? '—'
       : '${expiresAt!.year.toString().padLeft(4, '0')}-'
@@ -37,7 +55,7 @@ class LicenseService {
       '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   static const _secretHex =
       '899da048421b85fc17ede1b0dae13af8a932de30ac19d9b1479afd9864e76b01';
-  static final _epoch = DateTime.utc(2024, 1, 1);
+  static final _epoch = DateTime(2024, 1, 1);
   static const _licenseCodeKey = 'license_v1_code';
   static const _licenseExpiryKey = 'license_v1_expiry';
   static final _db = DatabaseHelper.instance;
@@ -77,7 +95,11 @@ class LicenseService {
     return info;
   }
 
-  static Future<LicenseInfo> verify(String code) async {
+  static Future<LicenseInfo> verify(String code) =>
+      verifyAt(code, DateTime.now());
+
+  /// [now] is injectable so expiry-boundary behavior can be tested exactly.
+  static Future<LicenseInfo> verifyAt(String code, DateTime now) async {
     final deviceId = await getDeviceId();
     if (!RegExp(r'^[0-9A-Za-z]{19}$').hasMatch(code)) {
       return LicenseInfo(result: LicenseResult.badFormat, deviceId: deviceId);
@@ -106,8 +128,7 @@ class LicenseService {
 
     final days = (expiry[0] << 8) | expiry[1];
     final expiresAt = _epoch.add(Duration(days: days));
-    final now = DateTime.now().toUtc();
-    final today = DateTime.utc(now.year, now.month, now.day);
+    final today = DateTime(now.year, now.month, now.day);
     return LicenseInfo(
       result: today.isAfter(expiresAt)
           ? LicenseResult.expired

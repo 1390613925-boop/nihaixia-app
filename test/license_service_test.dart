@@ -20,11 +20,32 @@ void main() {
   });
 
   test('supplied generator oracle verifies field-for-field', () async {
-    final info = await LicenseService.verify(generatorOracle);
+    final info = await LicenseService.verifyAt(
+      generatorOracle,
+      DateTime(2099, 12, 30, 23, 59),
+    );
     expect(info.result, LicenseResult.valid);
     expect(info.deviceId, device);
     expect(info.code, generatorOracle);
     expect(info.expiryLabel, '2099-12-31');
+  });
+
+  test('到期日全天有效，次日起立即过期', () async {
+    final lastDay = await LicenseService.verifyAt(
+      generatorOracle,
+      DateTime(2099, 12, 31, 23, 59, 59),
+    );
+    expect(lastDay.result, LicenseResult.valid);
+    expect(
+      lastDay.remainingLabelAt(DateTime(2099, 12, 31, 23, 59, 59)),
+      '今日到期（剩余不到1天）',
+    );
+
+    final nextDay = await LicenseService.verifyAt(
+      generatorOracle,
+      DateTime(2100, 1, 1),
+    );
+    expect(nextDay.result, LicenseResult.expired);
   });
 
   test('card is bound to its device id', () async {
