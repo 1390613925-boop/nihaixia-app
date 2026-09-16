@@ -61,14 +61,14 @@ jobs:
           yes | "$SDKMGR" --licenses >/dev/null 2>&1 || true
           echo "y" | "$SDKMGR" "ndk;${{ env.NDK_VERSION }}"
 
-      - name: Decode signing key (optional)
+      - name: Decode required release signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > android/keystore.jks
             # 注意：build.gradle.kts 中 storeFile 以 android/app/ 为基准解析，
             # 故此处必须写 ../keystore.jks（与本地 ../release-key.jks 同构）。
@@ -82,8 +82,18 @@ jobs:
             ls -l android/keystore.jks
             echo "key.properties 字段数：$(grep -c '=' android/key.properties)"
           else
-            echo "未配置签名 Secrets，本次回退 debug 签名"
+            echo "缺少正式签名 Secrets；停止发布，避免产生不可覆盖安装的 debug 包。"
+            exit 1
           fi
+
+      - name: Verify encrypted distribution layer
+        run: |
+          test -f lib/services/license_service.dart
+          test -f lib/screens/activation_screen.dart
+          grep -q "1390613925-boop" lib/services/update_service.dart
+          grep -q "岐黄经方" lib/main.dart
+          grep -q "isMinifyEnabled = true" android/app/build.gradle.kts
+          grep -q "isShrinkResources = true" android/app/build.gradle.kts
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
@@ -107,6 +117,9 @@ jobs:
 
       - name: Flutter pub get
         run: flutter pub get
+
+      - name: Test card-key and personal update feed
+        run: flutter test test/license_service_test.dart test/services/update_service_test.dart
 
       - name: Build APK (universal)
         run: flutter build apk --release

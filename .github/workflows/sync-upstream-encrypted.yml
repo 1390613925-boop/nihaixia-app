@@ -1,0 +1,80 @@
+name: Sync upstream and publish encrypted APK
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every day at 03:20 China Standard Time.
+    - cron: '20 19 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-encrypted
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout personal master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git bot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge upstream and restore private distribution layer
+        id: sync
+        run: bash .github/scripts/sync_upstream_encrypted.sh
+
+      - name: Set up Flutter
+        if: steps.sync.outputs.UPSTREAM_CHANGED == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Verify protected functionality and upstream data
+        if: steps.sync.outputs.UPSTREAM_CHANGED == 'true'
+        run: |
+          test -f lib/services/license_service.dart
+          test -f lib/screens/activation_screen.dart
+          grep -q "1390613925-boop" lib/services/update_service.dart
+          grep -q "岐黄经方" lib/main.dart
+          grep -q "isMinifyEnabled = true" android/app/build.gradle.kts
+          grep -q "isShrinkResources = true" android/app/build.gradle.kts
+          if ! git diff --quiet upstream/master -- assets/data; then
+            echo "assets/data differs from upstream; stopping to prevent silent data drift."
+            git diff --name-status upstream/master -- assets/data
+            exit 1
+          fi
+          flutter pub get
+          flutter test test/license_service_test.dart test/services/update_service_test.dart
+
+      - name: Commit, push and tag
+        if: steps.sync.outputs.UPSTREAM_CHANGED == 'true'
+        env:
+          VERSION: ${{ steps.sync.outputs.VERSION }}
+          TAG: ${{ steps.sync.outputs.TAG }}
+        run: |
+          git add -A
+          git commit -m "chore: sync upstream and preserve encrypted distribution v$VERSION"
+          git push origin master
+          git tag -a "$TAG" -m "岐黄经方 $TAG 自动同步加密版"
+          git push origin "$TAG"
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.sync.outputs.UPSTREAM_CHANGED }}" = "true" ]; then
+            echo "Upstream synced. Tag ${{ steps.sync.outputs.TAG }} was pushed; build-apk.yml will publish the signed encrypted APK." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No upstream update; no version or release was created." >> "$GITHUB_STEP_SUMMARY"
+          fi
