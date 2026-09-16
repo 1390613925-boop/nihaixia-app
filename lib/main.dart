@@ -9,6 +9,8 @@ import 'data/herb_repository.dart';
 import 'data/settings_repository.dart';
 import 'data/ziwei_rules_repository.dart';
 import 'screens/home_screen.dart';
+import 'screens/activation_screen.dart';
+import 'services/license_service.dart';
 import 'theme/app_colors.dart';
 
 void main() async {
@@ -25,8 +27,15 @@ void main() async {
   runApp(const NiHaishaApp());
 }
 
-class NiHaishaApp extends StatelessWidget {
+class NiHaishaApp extends StatefulWidget {
   const NiHaishaApp({super.key});
+
+  @override
+  State<NiHaishaApp> createState() => _NiHaishaAppState();
+}
+
+class _NiHaishaAppState extends State<NiHaishaApp> {
+  late Future<LicenseInfo> _license = LicenseService.current();
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +44,7 @@ class NiHaishaApp extends StatelessWidget {
       builder: (context, _) {
         final settings = SettingsRepository.instance;
         return MaterialApp(
-          title: '汉唐中医',
+          title: '岐黄经方',
           debugShowCheckedModeBanner: false,
           themeMode: settings.themeMode,
           theme: ThemeData(
@@ -54,21 +63,34 @@ class NiHaishaApp extends StatelessWidget {
             useMaterial3: true,
             extensions: [AppColors.dark],
           ),
-          home: MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(settings.textScaleFactor),
-            ),
-            child: HomeScreen(textScaleFactor: settings.textScaleFactor),
+          home: FutureBuilder<LicenseInfo>(
+            future: _license,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final child = snapshot.data!.isValid
+                  ? HomeScreen(textScaleFactor: settings.textScaleFactor)
+                  : ActivationScreen(
+                      onActivated: (_) =>
+                          setState(() => _license = LicenseService.current()),
+                    );
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(settings.textScaleFactor),
+                ),
+                child: child,
+              );
+            },
           ),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: const [
-            Locale('zh', 'CN'),
-            Locale('en', 'US'),
-          ],
+          supportedLocales: const [Locale('zh', 'CN'), Locale('en', 'US')],
           locale: const Locale('zh', 'CN'),
         );
       },
