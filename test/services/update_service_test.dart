@@ -2,6 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nihaisha_app/services/update_service.dart';
 
 void main() {
+  test('更新源固定为自有仓库', () {
+    expect(UpdateService.repositoryOwner, '1390613925-boop');
+    expect(UpdateService.repositoryName, 'nihaixia-app');
+    expect(
+      UpdateService.releasesApiUrl,
+      'https://api.github.com/repos/1390613925-boop/nihaixia-app/releases/latest',
+    );
+  });
+
   group('UpdateService 版本比较逻辑', () {
     // 由于 _isNewerVersion 是私有方法，我们通过公共API间接测试
     // 这里测试 UpdateInfo 的构造和版本格式

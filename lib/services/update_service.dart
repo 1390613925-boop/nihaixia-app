@@ -28,8 +28,10 @@ class UpdateInfo {
 }
 
 class UpdateService {
-  static const _repoOwner = 'jangviktor-web';
-  static const _repoName = 'nihaixia-app';
+  static const repositoryOwner = '1390613925-boop';
+  static const repositoryName = 'nihaixia-app';
+  static const releasesApiUrl =
+      'https://api.github.com/repos/$repositoryOwner/$repositoryName/releases/latest';
   static const _ignoredVersionKey = 'ignored_update_version';
   static const _permanentlyIgnoredKey = 'permanently_ignored_versions';
   static const _mirrorEnabledKey = 'update_mirror_enabled';
@@ -68,7 +70,7 @@ class UpdateService {
     try {
       final currentVersion = await getCurrentVersion();
       final sources = const <String>[
-        'https://api.github.com/repos/$_repoOwner/$_repoName/releases/latest',
+        releasesApiUrl,
       ];
 
       Map<String, dynamic>? releaseData;
@@ -97,13 +99,22 @@ class UpdateService {
       String apkUrl = '';
       int apkSize = 0;
       final assets = releaseData['assets'] as List<dynamic>? ?? [];
-      for (final asset in assets) {
-        final name = asset['name'] ?? '';
-        if (name.endsWith('.apk')) {
-          apkUrl = asset['browser_download_url'] ?? '';
-          apkSize = asset['size'] ?? 0;
+      final apkAssets = assets.where((asset) {
+        final name = asset['name']?.toString() ?? '';
+        return name.endsWith('.apk');
+      }).toList();
+      dynamic selectedAsset;
+      for (final asset in apkAssets) {
+        final name = asset['name']?.toString() ?? '';
+        if (name == 'app-release.apk' || name.contains('universal')) {
+          selectedAsset = asset;
           break;
         }
+      }
+      selectedAsset ??= apkAssets.isEmpty ? null : apkAssets.first;
+      if (selectedAsset != null) {
+        apkUrl = selectedAsset['browser_download_url']?.toString() ?? '';
+        apkSize = selectedAsset['size'] as int? ?? 0;
       }
 
       if (apkUrl.isEmpty) return null;
