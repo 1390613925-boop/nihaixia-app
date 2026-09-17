@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/settings_repository.dart';
+import '../config/distribution_config.dart';
 import '../services/license_service.dart';
 import '../services/update_service.dart';
 import 'app_dialogs.dart';
@@ -62,9 +63,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _exportTile(cs),
             _clearCacheTile(cs),
             const Divider(height: 24),
-            _sectionTitle('授权'),
-            _licenseTile(cs),
-            const Divider(height: 24),
+            if (licenseGateEnabled) ...[
+              _sectionTitle('授权'),
+              _licenseTile(cs),
+              const Divider(height: 24),
+            ],
             _aboutTile(cs),
             const Divider(height: 24),
             _sectionTitle('更新'),

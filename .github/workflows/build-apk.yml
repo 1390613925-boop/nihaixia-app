@@ -124,8 +124,22 @@ jobs:
       - name: Build APK (universal)
         run: flutter build apk --release
 
+      - name: Stage encrypted universal APK
+        run: |
+          mkdir -p release-artifacts
+          cp build/app/outputs/flutter-apk/app-release.apk release-artifacts/app-release.apk
+
+      - name: Build explicitly named unlocked APK
+        run: flutter build apk --release --dart-define=LICENSE_GATE_ENABLED=false
+
+      - name: Stage unlocked APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk release-artifacts/app-unlocked-release.apk
+
       - name: Build APK (split per ABI)
         run: flutter build apk --release --split-per-abi
+
+      - name: Stage encrypted split APKs
+        run: cp build/app/outputs/flutter-apk/app-*-release.apk release-artifacts/
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -136,4 +150,4 @@ jobs:
           body_path: release_notes/${{ github.ref_name }}.md
           fail_on_unmatched_files: false
           files: |
-            build/app/outputs/flutter-apk/*.apk
+            release-artifacts/*.apk

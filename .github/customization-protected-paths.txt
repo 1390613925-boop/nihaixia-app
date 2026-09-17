@@ -2,6 +2,7 @@
 # restores these paths after merging upstream, so released APKs keep the card
 # gate, Qihuang branding, own update feed, release signing and R8 settings.
 lib/services/license_service.dart
+lib/config/distribution_config.dart
 lib/screens/activation_screen.dart
 lib/screens/settings_screen.dart
 lib/main.dart

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'config/distribution_config.dart';
 import 'data/acupuncture_repository.dart';
 import 'data/acupoint_repository.dart';
 import 'data/changelog_repository.dart';
@@ -43,11 +44,13 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _licenseTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => _refreshLicense(),
-    );
+    if (licenseGateEnabled) {
+      WidgetsBinding.instance.addObserver(this);
+      _licenseTimer = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => _refreshLicense(),
+      );
+    }
   }
 
   void _refreshLicense() {
@@ -56,7 +59,9 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _refreshLicense();
+    if (licenseGateEnabled && state == AppLifecycleState.resumed) {
+      _refreshLicense();
+    }
   }
 
   @override
@@ -92,25 +97,34 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
             useMaterial3: true,
             extensions: [AppColors.dark],
           ),
-          home: FutureBuilder<LicenseInfo>(
-            future: _license,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final child = snapshot.data!.isValid
-                  ? HomeScreen(textScaleFactor: settings.textScaleFactor)
-                  : ActivationScreen(onActivated: (_) => _refreshLicense());
-              return MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.linear(settings.textScaleFactor),
+          home: licenseGateEnabled
+              ? FutureBuilder<LicenseInfo>(
+                  future: _license,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final child = snapshot.data!.isValid
+                        ? HomeScreen(textScaleFactor: settings.textScaleFactor)
+                        : ActivationScreen(
+                            onActivated: (_) => _refreshLicense(),
+                          );
+                    return MediaQuery(
+                      data: MediaQuery.of(context).copyWith(
+                        textScaler: TextScaler.linear(settings.textScaleFactor),
+                      ),
+                      child: child,
+                    );
+                  },
+                )
+              : MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(settings.textScaleFactor),
+                  ),
+                  child: HomeScreen(textScaleFactor: settings.textScaleFactor),
                 ),
-                child: child,
-              );
-            },
-          ),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
