@@ -40,6 +40,11 @@ for path in "${protected_paths[@]}"; do
   fi
 done
 
+# Upstream legitimately uses its original product name. Reapply only the
+# user-facing personal branding after each merge while leaving historical
+# source texts and classic quotations untouched.
+python3 tool/apply_qihuang_branding.py
+
 # Android requires a larger versionCode for an in-place update. Both values are
 # incremented automatically; no manual version editing is needed.
 PREVIOUS_VERSION="$(cat "$SNAPSHOT_DIR/previous-version.txt")" python3 <<'PY'
