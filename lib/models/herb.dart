@@ -36,18 +36,24 @@ class Herb {
   });
 
   factory Herb.fromJson(Map<String, dynamic> json) {
+    String? optionalText(String key) {
+      final value = json[key] as String?;
+      return value == null || value.trim().isEmpty ? null : value;
+    }
+
     return Herb(
       name: json['name'] as String,
-      original: json['original'] as String?,
-      nature: json['nature'] as String?,
-      action: json['action'] as String?,
-      rongchuan: json['rongchuan'] as String?,
-      niNote: json['ni_note'] as String?,
-      dosage: json['dosage'] as String?,
-      contraindication: json['contraindication'] as String?,
-      clinicalNotes: json['clinical_notes'] as String?,
-      historicalNotes: json['historical_notes'] as String?,
-      herbComparisons: (json['herb_comparisons'] as List<dynamic>?)?.cast<String>() ?? [],
+      original: optionalText('original'),
+      nature: optionalText('nature'),
+      action: optionalText('action'),
+      rongchuan: optionalText('rongchuan'),
+      niNote: optionalText('ni_note'),
+      dosage: optionalText('dosage'),
+      contraindication: optionalText('contraindication'),
+      clinicalNotes: optionalText('clinical_notes'),
+      historicalNotes: optionalText('historical_notes'),
+      herbComparisons:
+          (json['herb_comparisons'] as List<dynamic>?)?.cast<String>() ?? [],
       natureCategory: json['nature_category'] as String? ?? '平',
       flavor: json['flavor'] as String? ?? '',
       meridians: (json['meridians'] as List<dynamic>?)?.cast<String>() ?? [],
@@ -57,11 +63,16 @@ class Herb {
 
   IconData get natureIcon {
     switch (natureCategory) {
-      case '热': return Icons.local_fire_department;
-      case '温': return Icons.thermostat;
-      case '寒': return Icons.ac_unit;
-      case '凉': return Icons.water_drop;
-      default: return Icons.balance;
+      case '热':
+        return Icons.local_fire_department;
+      case '温':
+        return Icons.thermostat;
+      case '寒':
+        return Icons.ac_unit;
+      case '凉':
+        return Icons.water_drop;
+      default:
+        return Icons.balance;
     }
   }
 
