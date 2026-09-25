@@ -41,15 +41,19 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
   /// 计算后向关联：含此药的闭门课（静态 const，同步即可）+ 含此药的医案（全量解析较重，异步避免首帧卡顿）。
   Future<void> _loadBacklinks() async {
     _relatedCritical = kCriticalIllnesses
-        .where((it) =>
-            it.tags.any((t) => HerbRepository.canonicalOf(t) == widget.herb.name))
+        .where(
+          (it) => it.tags.any(
+            (t) => HerbRepository.canonicalOf(t) == widget.herb.name,
+          ),
+        )
         .toList();
     try {
       final cases = await getAllMedicalCases();
       if (!mounted) return;
       setState(() {
-        _relatedCases =
-            cases.where((c) => c.herbNames.contains(widget.herb.name)).toList();
+        _relatedCases = cases
+            .where((c) => c.herbNames.contains(widget.herb.name))
+            .toList();
         _casesReady = true;
       });
     } catch (_) {
@@ -63,26 +67,27 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
       final bookmarks = await db.getAllBookmarks();
       final match = bookmarks.firstWhere(
         (b) => b.title == widget.herb.name,
-        orElse: () => Bookmark(title: '', content: '', category: '', source: ''),
+        orElse: () =>
+            Bookmark(title: '', content: '', category: '', source: ''),
       );
       if (match.id != null) {
         await db.deleteBookmark(match.id!);
       }
     } else {
-      await db.insertBookmark(Bookmark(
-        title: widget.herb.name,
-        content: _buildBookmarkContent(),
-        category: '本草',
-        source: 'herb_detail',
-      ));
+      await db.insertBookmark(
+        Bookmark(
+          title: widget.herb.name,
+          content: _buildBookmarkContent(),
+          category: '本草',
+          source: 'herb_detail',
+        ),
+      );
     }
     if (mounted) setState(() => _isBookmarked = !_isBookmarked);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isBookmarked ? '已收藏' : '已取消收藏'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_isBookmarked ? '已收藏' : '已取消收藏')));
     }
   }
 
@@ -99,8 +104,11 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
     final herb = widget.herb;
     final cs = Theme.of(context).colorScheme;
     final relatedFormulas = FormulaRepository.getAll()
-        .where((f) => f.components
-            .any((c) => HerbRepository.canonicalOf(c.name) == herb.name))
+        .where(
+          (f) => f.components.any(
+            (c) => HerbRepository.canonicalOf(c.name) == herb.name,
+          ),
+        )
         .toList();
 
     return Scaffold(
@@ -108,9 +116,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
         title: Text(herb.name),
         actions: [
           IconButton(
-            icon: Icon(
-              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-            ),
+            icon: Icon(_isBookmarked ? Icons.bookmark : Icons.bookmark_border),
             onPressed: _toggleBookmark,
           ),
           Padding(
@@ -135,7 +141,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // Header: name + category + flavor
-          Card(
+          _DetailSection(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -144,7 +150,9 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                   Text(
                     herb.name,
                     style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -155,16 +163,14 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                         label: Text(herb.category),
                         backgroundColor: cs.primaryContainer,
                         labelStyle: TextStyle(color: cs.onPrimaryContainer),
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: VisualDensity.compact,
                       ),
                       if (herb.flavor.isNotEmpty)
                         Chip(
                           label: Text('味${herb.flavor}'),
                           backgroundColor: cs.secondaryContainer,
-                          labelStyle:
-                              TextStyle(color: cs.onSecondaryContainer),
+                          labelStyle: TextStyle(color: cs.onSecondaryContainer),
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
@@ -173,8 +179,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                         Chip(
                           label: Text('归经: ${herb.meridians.join(" ")}'),
                           backgroundColor: cs.tertiaryContainer,
-                          labelStyle:
-                              TextStyle(color: cs.onTertiaryContainer),
+                          labelStyle: TextStyle(color: cs.onTertiaryContainer),
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
@@ -193,22 +198,20 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
           if (herb.action != null) _buildSection('主治', herb.action!, cs),
 
           // 本经原文
-          if (herb.original != null)
-            _buildSection('本经原文', herb.original!, cs),
+          if (herb.original != null) _buildSection('本经原文', herb.original!, cs),
 
           // 倪注
           if (herb.niNote != null) _buildSection('倪注', herb.niNote!, cs),
 
           // 容川注
-          if (herb.rongchuan != null)
-            _buildSection('容川注', herb.rongchuan!, cs),
+          if (herb.rongchuan != null) _buildSection('容川注', herb.rongchuan!, cs),
 
           // 用量
           if (herb.dosage != null) _buildSection('用量', herb.dosage!, cs),
 
           // 禁忌
           if (herb.contraindication != null)
-            Card(
+            _DetailSection(
               color: cs.errorContainer,
               margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
@@ -218,8 +221,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.warning_amber,
-                            color: cs.onErrorContainer),
+                        Icon(Icons.warning_amber, color: cs.onErrorContainer),
                         const SizedBox(width: 8),
                         Text(
                           '禁忌',
@@ -235,9 +237,10 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                     Text(
                       herb.contraindication!,
                       style: TextStyle(
-                          fontSize: 14,
-                          height: 1.6,
-                          color: cs.onErrorContainer),
+                        fontSize: 14,
+                        height: 1.6,
+                        color: cs.onErrorContainer,
+                      ),
                     ),
                   ],
                 ),
@@ -246,7 +249,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
 
           // 倪师临床口述
           if (herb.clinicalNotes != null)
-            Card(
+            _DetailSection(
               color: cs.tertiaryContainer,
               margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
@@ -256,8 +259,10 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.record_voice_over,
-                            color: cs.onTertiaryContainer),
+                        Icon(
+                          Icons.record_voice_over,
+                          color: cs.onTertiaryContainer,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           '倪师临床口述',
@@ -273,9 +278,10 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                     Text(
                       herb.clinicalNotes!,
                       style: TextStyle(
-                          fontSize: 14,
-                          height: 1.6,
-                          color: cs.onTertiaryContainer),
+                        fontSize: 14,
+                        height: 1.6,
+                        color: cs.onTertiaryContainer,
+                      ),
                     ),
                   ],
                 ),
@@ -284,7 +290,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
 
           // 历代医家注释
           if (herb.historicalNotes != null && herb.historicalNotes!.isNotEmpty)
-            Card(
+            _DetailSection(
               color: cs.surfaceContainerHighest,
               margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
@@ -294,8 +300,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.history_edu,
-                            color: cs.onSurfaceVariant),
+                        Icon(Icons.history_edu, color: cs.onSurfaceVariant),
                         const SizedBox(width: 8),
                         Text(
                           '历代医家注释',
@@ -311,9 +316,10 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                     Text(
                       herb.historicalNotes!,
                       style: TextStyle(
-                          fontSize: 14,
-                          height: 1.6,
-                          color: cs.onSurfaceVariant),
+                        fontSize: 14,
+                        height: 1.6,
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -322,7 +328,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
 
           // 药物比较
           if (herb.herbComparisons.isNotEmpty)
-            Card(
+            _DetailSection(
               color: context.colors.primaryContainer,
               margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
@@ -332,8 +338,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.compare_arrows,
-                            color: cs.primary),
+                        Icon(Icons.compare_arrows, color: cs.primary),
                         const SizedBox(width: 8),
                         Text(
                           '药物比较',
@@ -346,23 +351,26 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    ...herb.herbComparisons.map((c) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        '· $c',
-                        style: TextStyle(
+                    ...herb.herbComparisons.map(
+                      (c) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          '· $c',
+                          style: TextStyle(
                             fontSize: 14,
                             height: 1.5,
-                            color: cs.onSurface),
+                            color: cs.onSurface,
+                          ),
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
               ),
             ),
 
           // 相关内容入口（三级结构第一级：药物页仅放入口按钮，列表/详情各自独立加载）
-          Card(
+          _DetailSection(
             margin: const EdgeInsets.only(bottom: 12),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -439,8 +447,7 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
               const SizedBox(height: 2),
               Text(
                 count == null ? '…' : '$count 条',
-                style:
-                    TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -449,14 +456,11 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
     );
   }
 
-  Widget _entryDivider(ColorScheme cs) => Container(
-        width: 1,
-        height: 32,
-        color: cs.outlineVariant,
-      );
+  Widget _entryDivider(ColorScheme cs) =>
+      Container(width: 1, height: 32, color: cs.outlineVariant);
 
   Widget _buildSection(String title, String content, ColorScheme cs) {
-    return Card(
+    return _DetailSection(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -472,13 +476,29 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              content,
-              style: const TextStyle(fontSize: 14, height: 1.6),
-            ),
+            Text(content, style: const TextStyle(fontSize: 14, height: 1.6)),
           ],
         ),
       ),
     );
   }
+}
+
+class _DetailSection extends StatelessWidget {
+  final Widget child;
+  final Color? color;
+  final EdgeInsetsGeometry? margin;
+
+  const _DetailSection({required this.child, this.color, this.margin});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: margin ?? const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      border: Border(
+        bottom: BorderSide(color: context.colors.outlineVariant, width: .5),
+      ),
+    ),
+    child: child,
+  );
 }

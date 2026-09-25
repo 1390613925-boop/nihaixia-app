@@ -190,7 +190,7 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
           child: entries.isEmpty
               ? const Center(child: Text('无匹配结果'))
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: EdgeInsets.zero,
                   itemCount: entries.length,
                   itemBuilder: (context, index) {
                     return _buildEntryCard(entries[index]);
@@ -202,9 +202,15 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
   }
 
   Widget _buildEntryCard(AcupointEntry entry) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: context.colors.outlineVariant, width: .5),
+          left: BorderSide(color: context.colors.primary, width: 4),
+        ),
+      ),
       child: ExpansionTile(
+        tilePadding: const EdgeInsets.fromLTRB(12, 2, 16, 2),
         title: Row(
           children: [
             Expanded(
@@ -355,7 +361,7 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
           child: penetrations.isEmpty
               ? const Center(child: Text('无匹配结果'))
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: EdgeInsets.zero,
                   itemCount: penetrations.length,
                   itemBuilder: (context, index) {
                     return _buildPenetrationCard(penetrations[index]);
@@ -593,9 +599,15 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
     final hasDetail =
         acupoint.description.isNotEmpty || acupoint.location.isNotEmpty;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: context.colors.outlineVariant, width: .5),
+          left: BorderSide(color: context.colors.info, width: 4),
+        ),
+      ),
       child: ListTile(
+        contentPadding: const EdgeInsets.fromLTRB(12, 4, 16, 4),
         title: Row(
           children: [
             Text(

@@ -93,26 +93,27 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
       final bookmarks = await db.getAllBookmarks();
       final match = bookmarks.firstWhere(
         (b) => b.title == widget.formula.name,
-        orElse: () => Bookmark(title: '', content: '', category: '', source: ''),
+        orElse: () =>
+            Bookmark(title: '', content: '', category: '', source: ''),
       );
       if (match.id != null) {
         await db.deleteBookmark(match.id!);
       }
     } else {
-      await db.insertBookmark(Bookmark(
-        title: widget.formula.name,
-        content: _buildBookmarkContent(),
-        category: '方剂',
-        source: 'formula_detail',
-      ));
+      await db.insertBookmark(
+        Bookmark(
+          title: widget.formula.name,
+          content: _buildBookmarkContent(),
+          category: '方剂',
+          source: 'formula_detail',
+        ),
+      );
     }
     if (mounted) setState(() => _isBookmarked = !_isBookmarked);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isBookmarked ? '已收藏' : '已取消收藏'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_isBookmarked ? '已收藏' : '已取消收藏')));
     }
   }
 
@@ -136,14 +137,16 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
       final nameRe = _formulaNameRegExp();
       // 并行读取（伤寒 380 + 金匮 453 个条文资源；串行会明显拖慢首次打开）
       final shTexts = await Future.wait(
-          kShangHanLectures.map((l) => _loadAssetText(l.asset)));
+        kShangHanLectures.map((l) => _loadAssetText(l.asset)),
+      );
       for (var i = 0; i < kShangHanLectures.length; i++) {
         if (clauseIntroducesFormula(shTexts[i], nameRe, name)) {
           sh.add(kShangHanLectures[i]);
         }
       }
       final jgTexts = await Future.wait(
-          kJinguiLectures.map((l) => _loadAssetText(l.asset)));
+        kJinguiLectures.map((l) => _loadAssetText(l.asset)),
+      );
       for (var i = 0; i < kJinguiLectures.length; i++) {
         if (clauseIntroducesFormula(jgTexts[i], nameRe, name)) {
           jg.add(kJinguiLectures[i]);
@@ -165,18 +168,23 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
   /// 避免「四逆汤」误命中「茯苓四逆汤」「通脉四逆汤」等更长方名。
   static RegExp _formulaNameRegExp() {
     return _nameReCache ??= () {
-      final names = FormulaRepository.getAll()
-          .map((f) => f.name)
-          .where((n) => n.isNotEmpty)
-          .toList()
-        ..sort((a, b) => b.length.compareTo(a.length));
+      final names =
+          FormulaRepository.getAll()
+              .map((f) => f.name)
+              .where((n) => n.isNotEmpty)
+              .toList()
+            ..sort((a, b) => b.length.compareTo(a.length));
       return RegExp(names.map(RegExp.escape).join('|'));
     }();
   }
 
   Widget _buildClauseCard(ClassicLecture lec) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: context.colors.outlineVariant, width: .5),
+        ),
+      ),
       child: ListTile(
         title: Text(lec.name, style: const TextStyle(fontSize: 13)),
         trailing: const Icon(Icons.chevron_right, size: 18),
@@ -199,8 +207,14 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
     return [
       Padding(
         padding: const EdgeInsets.only(top: 8, bottom: 2),
-        child: Text(bookName,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+        child: Text(
+          bookName,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
       ),
       ...hits.map(_buildClauseCard),
     ];
@@ -216,9 +230,7 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
         title: Text(f.name),
         actions: [
           IconButton(
-            icon: Icon(
-              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-            ),
+            icon: Icon(_isBookmarked ? Icons.bookmark : Icons.bookmark_border),
             onPressed: _toggleBookmark,
           ),
         ],
@@ -233,8 +245,12 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
+                border: Border(
+                  bottom: BorderSide(
+                    color: context.colors.outlineVariant,
+                    width: .5,
+                  ),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,11 +296,11 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
                 child: InkWell(
                   onTap: herb != null
                       ? () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => HerbDetailScreen(herb: herb),
-                            ),
-                          )
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HerbDetailScreen(herb: herb),
+                          ),
+                        )
                       : null,
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
@@ -314,8 +330,12 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
                                   text: c.name,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: herb != null ? cs.primary : cs.onSurface,
-                                    decoration: herb != null ? TextDecoration.underline : null,
+                                    color: herb != null
+                                        ? cs.primary
+                                        : cs.onSurface,
+                                    decoration: herb != null
+                                        ? TextDecoration.underline
+                                        : null,
                                   ),
                                 ),
                                 if (c.dosage.isNotEmpty)
@@ -378,10 +398,7 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
             if (f.dosage.isNotEmpty) ...[
               _SectionTitle(title: '煎服法'),
               const SizedBox(height: 8),
-              Text(
-                f.dosage,
-                style: const TextStyle(fontSize: 14, height: 1.6),
-              ),
+              Text(f.dosage, style: const TextStyle(fontSize: 14, height: 1.6)),
               const SizedBox(height: 20),
             ],
 
@@ -417,11 +434,18 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
                 child: CircularProgressIndicator(),
               )
             else if (_shanghanHits.isEmpty && _jinguiHits.isEmpty)
-              Text('暂未在该模块经典中找到出处',
-                  style: TextStyle(fontSize: 13, color: context.colors.onSurfaceVariant))
+              Text(
+                '暂未在该模块经典中找到出处',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: context.colors.onSurfaceVariant,
+                ),
+              )
             else ...[
-              if (_shanghanHits.isNotEmpty) ..._buildBookGroup('伤寒论', _shanghanHits),
-              if (_jinguiHits.isNotEmpty) ..._buildBookGroup('金匮要略', _jinguiHits),
+              if (_shanghanHits.isNotEmpty)
+                ..._buildBookGroup('伤寒论', _shanghanHits),
+              if (_jinguiHits.isNotEmpty)
+                ..._buildBookGroup('金匮要略', _jinguiHits),
             ],
           ],
         ),

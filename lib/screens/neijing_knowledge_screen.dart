@@ -19,67 +19,44 @@ class NeijingKnowledgeScreen extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            margin: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-            padding: const EdgeInsets.all(16),
+            height: 48,
+            margin: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: context.colors.primary,
-              borderRadius: BorderRadius.circular(20),
+              color: context.colors.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  '内经索引台',
-                  style: TextStyle(
-                    color: context.colors.onPrimary,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
+                _NeijingAction(
+                  label: '条目',
+                  icon: Icons.grid_view_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NeijingEntriesScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '脏象、望诊与脉诊资料，亦可进入全文和结构化条目。',
-                  style: TextStyle(
-                    color: context.colors.onPrimary.withValues(alpha: .78),
-                    fontSize: 11,
+                _NeijingAction(
+                  label: '全文',
+                  icon: Icons.menu_book_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NeijingLibraryScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _NeijingAction(
-                      label: '条目',
-                      icon: Icons.grid_view_outlined,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const NeijingEntriesScreen(),
-                        ),
-                      ),
+                _NeijingAction(
+                  label: '检索',
+                  icon: Icons.search,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NeijingSearchScreen(),
                     ),
-                    const SizedBox(width: 8),
-                    _NeijingAction(
-                      label: '全文',
-                      icon: Icons.menu_book_outlined,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const NeijingLibraryScreen(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _NeijingAction(
-                      label: '检索',
-                      icon: Icons.search,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const NeijingSearchScreen(),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -130,7 +107,7 @@ class _NeijingAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Expanded(
     child: Material(
-      color: context.colors.onPrimary.withValues(alpha: .13),
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
@@ -140,12 +117,12 @@ class _NeijingAction extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 16, color: context.colors.onPrimary),
+              Icon(icon, size: 16, color: context.colors.primary),
               const SizedBox(width: 5),
               Text(
                 label,
                 style: TextStyle(
-                  color: context.colors.onPrimary,
+                  color: context.colors.onSurface,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
