@@ -83,18 +83,33 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
           themeMode: settings.themeMode,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF8B4513),
+              seedColor: const Color(0xFF176B68),
               brightness: Brightness.light,
             ),
             useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFFF3F7F6),
+            cardTheme: const CardThemeData(
+              elevation: 0,
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+                side: BorderSide(color: Color(0xFFD7E3E1)),
+              ),
+            ),
+            navigationBarTheme: const NavigationBarThemeData(
+              height: 72,
+              indicatorColor: Color(0xFFD2EAE6),
+            ),
             extensions: [AppColors.light],
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF8B4513),
+              seedColor: const Color(0xFF63C7BF),
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFF101B1F),
+            cardTheme: const CardThemeData(elevation: 0),
             extensions: [AppColors.dark],
           ),
           home: licenseGateEnabled

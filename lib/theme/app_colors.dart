@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 
 /// 语义化设计 Token（Design Tokens）——App 内颜色唯一来源（P0-3 根治）。
 ///
-/// 设计依据（设计师终稿）：品牌棕 seed #8B4513；中性系暖调去纯白纯黑；
+/// 设计依据（设计师终稿）：墨青 seed #176B68；中性系采用冷静的青灰调；
 /// 状态系含 container；六经专用色 light 深 shade / dark 亮 shade（对比度≥4.5:1）。
 ///
 /// 使用方式：`Theme.of(context).extension<AppColors>()!`，或
 /// `context.colors`（见 [AppColorsContext]）。不要在页面内写裸颜色字面量。
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
-  // ---- 主色系（品牌棕） ----
+  // ---- 主色系（墨青） ----
   final Color primary;
   final Color onPrimary;
   final Color primaryContainer;
   final Color onPrimaryContainer;
 
-  // ---- 中性系（暖调） ----
+  // ---- 中性系（青灰） ----
   final Color background;
   final Color surface;
   final Color surfaceContainerHighest;
@@ -106,23 +106,23 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// 六经 container = 该色 12% alpha 叠加在底色上（light 白底 / dark 深底）。
   static Color _tint(Color c, {required bool dark}) {
-    final bg = dark ? const Color(0xFF221D18) : const Color(0xFFFFFFFF);
+    final bg = dark ? const Color(0xFF172327) : const Color(0xFFFFFFFF);
     return Color.alphaBlend(c.withValues(alpha: 0.12), bg);
   }
 
   static final AppColors light = AppColors(
-    primary: const Color(0xFF8B4513),
+    primary: const Color(0xFF176B68),
     onPrimary: const Color(0xFFFFFFFF),
-    primaryContainer: const Color(0xFFF5D7BC),
-    onPrimaryContainer: const Color(0xFF2B1A00),
-    background: const Color(0xFFFAF7F2),
+    primaryContainer: const Color(0xFFD2EAE6),
+    onPrimaryContainer: const Color(0xFF08201F),
+    background: const Color(0xFFF3F7F6),
     surface: const Color(0xFFFFFFFF),
-    surfaceContainerHighest: const Color(0xFFEFE8DF),
-    surfaceContainerLow: const Color(0xFFF4EFE8),
-    onSurface: const Color(0xFF201B15),
-    onSurfaceVariant: const Color(0xFF6F675C),
-    outline: const Color(0xFF857C71),
-    outlineVariant: const Color(0xFFD6CDC0),
+    surfaceContainerHighest: const Color(0xFFE3ECEA),
+    surfaceContainerLow: const Color(0xFFEDF3F2),
+    onSurface: const Color(0xFF172321),
+    onSurfaceVariant: const Color(0xFF586865),
+    outline: const Color(0xFF71827F),
+    outlineVariant: const Color(0xFFC4D4D1),
     danger: const Color(0xFFC62828),
     onDanger: const Color(0xFFFFFFFF),
     dangerContainer: const Color(0xFFFFDAD6),
@@ -134,39 +134,39 @@ class AppColors extends ThemeExtension<AppColors> {
     infoContainer: const Color(0xFFD6E9FF),
     meridianTaiyang: const Color(0xFFE65100),
     meridianTaiyangContainer: _tint(const Color(0xFFE65100), dark: false),
-    onMeridianTaiyang: const Color(0xFF201B15),
+    onMeridianTaiyang: const Color(0xFF172321),
     meridianYangming: const Color(0xFFC62828),
     meridianYangmingContainer: _tint(const Color(0xFFC62828), dark: false),
-    onMeridianYangming: const Color(0xFF201B15),
+    onMeridianYangming: const Color(0xFF172321),
     meridianShaoyang: const Color(0xFFD84315),
     meridianShaoyangContainer: _tint(const Color(0xFFD84315), dark: false),
-    onMeridianShaoyang: const Color(0xFF201B15),
+    onMeridianShaoyang: const Color(0xFF172321),
     meridianTaiyin: const Color(0xFF1565C0),
     meridianTaiyinContainer: _tint(const Color(0xFF1565C0), dark: false),
-    onMeridianTaiyin: const Color(0xFF201B15),
+    onMeridianTaiyin: const Color(0xFF172321),
     meridianShaoyin: const Color(0xFF6A1B9A),
     meridianShaoyinContainer: _tint(const Color(0xFF6A1B9A), dark: false),
-    onMeridianShaoyin: const Color(0xFF201B15),
+    onMeridianShaoyin: const Color(0xFF172321),
     meridianJueyin: const Color(0xFF37474F),
     meridianJueyinContainer: _tint(const Color(0xFF37474F), dark: false),
-    onMeridianJueyin: const Color(0xFF201B15),
-    tcmZone: const Color(0xFF9C6B3F),
-    metaphysicsZone: const Color(0xFF6A4C93),
+    onMeridianJueyin: const Color(0xFF172321),
+    tcmZone: const Color(0xFF327E76),
+    metaphysicsZone: const Color(0xFF526A86),
   );
 
   static final AppColors dark = AppColors(
-    primary: const Color(0xFFE0A878),
-    onPrimary: const Color(0xFF4A2A08),
-    primaryContainer: const Color(0xFF5C3A10),
-    onPrimaryContainer: const Color(0xFFF5D7BC),
-    background: const Color(0xFF191512),
-    surface: const Color(0xFF221D18),
-    surfaceContainerHighest: const Color(0xFF2C2620),
-    surfaceContainerLow: const Color(0xFF1E1A15),
-    onSurface: const Color(0xFFEFE9E2),
-    onSurfaceVariant: const Color(0xFFC4BBB0),
-    outline: const Color(0xFF8F867A),
-    outlineVariant: const Color(0xFF4F483E),
+    primary: const Color(0xFF63C7BF),
+    onPrimary: const Color(0xFF00201E),
+    primaryContainer: const Color(0xFF174F4B),
+    onPrimaryContainer: const Color(0xFFD2EAE6),
+    background: const Color(0xFF101B1F),
+    surface: const Color(0xFF172327),
+    surfaceContainerHighest: const Color(0xFF223136),
+    surfaceContainerLow: const Color(0xFF142025),
+    onSurface: const Color(0xFFE1ECEA),
+    onSurfaceVariant: const Color(0xFFB5C7C4),
+    outline: const Color(0xFF80918E),
+    outlineVariant: const Color(0xFF3C4C50),
     danger: const Color(0xFFFFB4AB),
     onDanger: const Color(0xFF690005),
     dangerContainer: const Color(0xFF93000A),
@@ -178,24 +178,24 @@ class AppColors extends ThemeExtension<AppColors> {
     infoContainer: const Color(0xFF1E4E7A),
     meridianTaiyang: const Color(0xFFFFB74D),
     meridianTaiyangContainer: _tint(const Color(0xFFFFB74D), dark: true),
-    onMeridianTaiyang: const Color(0xFFEFE9E2),
+    onMeridianTaiyang: const Color(0xFFE1ECEA),
     meridianYangming: const Color(0xFFE57373),
     meridianYangmingContainer: _tint(const Color(0xFFE57373), dark: true),
-    onMeridianYangming: const Color(0xFFEFE9E2),
+    onMeridianYangming: const Color(0xFFE1ECEA),
     meridianShaoyang: const Color(0xFFFF8A65),
     meridianShaoyangContainer: _tint(const Color(0xFFFF8A65), dark: true),
-    onMeridianShaoyang: const Color(0xFFEFE9E2),
+    onMeridianShaoyang: const Color(0xFFE1ECEA),
     meridianTaiyin: const Color(0xFF64B5F6),
     meridianTaiyinContainer: _tint(const Color(0xFF64B5F6), dark: true),
-    onMeridianTaiyin: const Color(0xFFEFE9E2),
+    onMeridianTaiyin: const Color(0xFFE1ECEA),
     meridianShaoyin: const Color(0xFFBA68C8),
     meridianShaoyinContainer: _tint(const Color(0xFFBA68C8), dark: true),
-    onMeridianShaoyin: const Color(0xFFEFE9E2),
+    onMeridianShaoyin: const Color(0xFFE1ECEA),
     meridianJueyin: const Color(0xFF90A4AE),
     meridianJueyinContainer: _tint(const Color(0xFF90A4AE), dark: true),
-    onMeridianJueyin: const Color(0xFFEFE9E2),
-    tcmZone: const Color(0xFFD7A877),
-    metaphysicsZone: const Color(0xFFB39DDB),
+    onMeridianJueyin: const Color(0xFFE1ECEA),
+    tcmZone: const Color(0xFF7DD2C9),
+    metaphysicsZone: const Color(0xFFA8BAD1),
   );
 
   /// 六经名 → 主色（UI 层共用，替代散落的硬编码色）。
@@ -345,8 +345,10 @@ class AppColors extends ThemeExtension<AppColors> {
       onPrimaryContainer: l(onPrimaryContainer, other.onPrimaryContainer),
       background: l(background, other.background),
       surface: l(surface, other.surface),
-      surfaceContainerHighest:
-          l(surfaceContainerHighest, other.surfaceContainerHighest),
+      surfaceContainerHighest: l(
+        surfaceContainerHighest,
+        other.surfaceContainerHighest,
+      ),
       surfaceContainerLow: l(surfaceContainerLow, other.surfaceContainerLow),
       onSurface: l(onSurface, other.onSurface),
       onSurfaceVariant: l(onSurfaceVariant, other.onSurfaceVariant),
@@ -362,28 +364,40 @@ class AppColors extends ThemeExtension<AppColors> {
       info: l(info, other.info),
       infoContainer: l(infoContainer, other.infoContainer),
       meridianTaiyang: l(meridianTaiyang, other.meridianTaiyang),
-      meridianTaiyangContainer:
-          l(meridianTaiyangContainer, other.meridianTaiyangContainer),
+      meridianTaiyangContainer: l(
+        meridianTaiyangContainer,
+        other.meridianTaiyangContainer,
+      ),
       onMeridianTaiyang: l(onMeridianTaiyang, other.onMeridianTaiyang),
       meridianYangming: l(meridianYangming, other.meridianYangming),
-      meridianYangmingContainer:
-          l(meridianYangmingContainer, other.meridianYangmingContainer),
+      meridianYangmingContainer: l(
+        meridianYangmingContainer,
+        other.meridianYangmingContainer,
+      ),
       onMeridianYangming: l(onMeridianYangming, other.onMeridianYangming),
       meridianShaoyang: l(meridianShaoyang, other.meridianShaoyang),
-      meridianShaoyangContainer:
-          l(meridianShaoyangContainer, other.meridianShaoyangContainer),
+      meridianShaoyangContainer: l(
+        meridianShaoyangContainer,
+        other.meridianShaoyangContainer,
+      ),
       onMeridianShaoyang: l(onMeridianShaoyang, other.onMeridianShaoyang),
       meridianTaiyin: l(meridianTaiyin, other.meridianTaiyin),
-      meridianTaiyinContainer:
-          l(meridianTaiyinContainer, other.meridianTaiyinContainer),
+      meridianTaiyinContainer: l(
+        meridianTaiyinContainer,
+        other.meridianTaiyinContainer,
+      ),
       onMeridianTaiyin: l(onMeridianTaiyin, other.onMeridianTaiyin),
       meridianShaoyin: l(meridianShaoyin, other.meridianShaoyin),
-      meridianShaoyinContainer:
-          l(meridianShaoyinContainer, other.meridianShaoyinContainer),
+      meridianShaoyinContainer: l(
+        meridianShaoyinContainer,
+        other.meridianShaoyinContainer,
+      ),
       onMeridianShaoyin: l(onMeridianShaoyin, other.onMeridianShaoyin),
       meridianJueyin: l(meridianJueyin, other.meridianJueyin),
-      meridianJueyinContainer:
-          l(meridianJueyinContainer, other.meridianJueyinContainer),
+      meridianJueyinContainer: l(
+        meridianJueyinContainer,
+        other.meridianJueyinContainer,
+      ),
       onMeridianJueyin: l(onMeridianJueyin, other.onMeridianJueyin),
       tcmZone: l(tcmZone, other.tcmZone),
       metaphysicsZone: l(metaphysicsZone, other.metaphysicsZone),

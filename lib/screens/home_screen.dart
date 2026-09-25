@@ -6,6 +6,7 @@ import 'tools_screen.dart';
 import '../services/update_service.dart';
 import '../services/whats_new_service.dart';
 import '../widgets/update_dialog.dart';
+import 'dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final double textScaleFactor;
@@ -22,12 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // 启动后弹出「本次更新了什么」（若有版本更新）
-    Future.delayed(
-      const Duration(milliseconds: 800),
-      () {
-        if (mounted) WhatsNewService.checkAndShow(context);
-      },
-    );
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) WhatsNewService.checkAndShow(context);
+    });
     // 延迟检查更新，避免影响启动速度
     Future.delayed(const Duration(seconds: 3), _checkUpdate);
   }
@@ -49,25 +47,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  final List<Widget> _screens = [
-    const KnowledgeScreen(),
-    const ToolsScreen(),
-    const ChatScreen(),
-    const BookmarksScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      DashboardScreen(
+        onOpenSection: (index) => setState(() => _currentIndex = index),
+      ),
+      const ChatScreen(),
+      const KnowledgeScreen(),
+      const BookmarksScreen(),
+      const ToolsScreen(),
+    ];
     return MediaQuery(
       data: MediaQuery.of(
         context,
       ).copyWith(textScaler: TextScaler.linear(widget.textScaleFactor)),
       child: Scaffold(
         // IndexedStack 常驻各 Tab，切换后保留问诊/搜索等页面 State（如聊天进度、滚动位置）
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        ),
+        body: IndexedStack(index: _currentIndex, children: screens),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: (index) {
@@ -75,24 +72,29 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book),
-              label: '知识库',
+              icon: Icon(Icons.space_dashboard_outlined),
+              selectedIcon: Icon(Icons.space_dashboard_rounded),
+              label: '首页',
             ),
             NavigationDestination(
-              icon: Icon(Icons.build_outlined),
-              selectedIcon: Icon(Icons.build),
-              label: '工具',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat_bubble),
+              icon: Icon(Icons.fact_check_outlined),
+              selectedIcon: Icon(Icons.fact_check_rounded),
               label: '辨证',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.local_library_outlined),
+              selectedIcon: Icon(Icons.local_library_rounded),
+              label: '资料',
             ),
             NavigationDestination(
               icon: Icon(Icons.bookmark_border),
               selectedIcon: Icon(Icons.bookmark),
               label: '收藏',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.apps_outlined),
+              selectedIcon: Icon(Icons.apps_rounded),
+              label: '工具',
             ),
           ],
         ),
