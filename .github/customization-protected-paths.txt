@@ -31,3 +31,4 @@ android/app/src/main/res/values/colors.xml
 assets/branding
 assets/data/changelog.json
 tool/apply_miyuanfang_branding.py
+lib/screens/brand_splash_screen.dart

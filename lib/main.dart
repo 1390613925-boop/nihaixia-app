@@ -13,6 +13,7 @@ import 'data/settings_repository.dart';
 import 'data/ziwei_rules_repository.dart';
 import 'screens/home_screen.dart';
 import 'screens/activation_screen.dart';
+import 'screens/brand_splash_screen.dart';
 import 'services/license_service.dart';
 import 'theme/app_colors.dart';
 
@@ -138,34 +139,42 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
             ),
             extensions: [AppColors.dark],
           ),
-          home: licenseGateEnabled
-              ? FutureBuilder<LicenseInfo>(
-                  future: _license,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Scaffold(
-                        body: Center(child: CircularProgressIndicator()),
+          home: BrandSplashScreen(
+            child: licenseGateEnabled
+                ? FutureBuilder<LicenseInfo>(
+                    future: _license,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Scaffold(
+                          body: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      final child = snapshot.data!.isValid
+                          ? HomeScreen(
+                              textScaleFactor: settings.textScaleFactor,
+                            )
+                          : ActivationScreen(
+                              onActivated: (_) => _refreshLicense(),
+                            );
+                      return MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          textScaler: TextScaler.linear(
+                            settings.textScaleFactor,
+                          ),
+                        ),
+                        child: child,
                       );
-                    }
-                    final child = snapshot.data!.isValid
-                        ? HomeScreen(textScaleFactor: settings.textScaleFactor)
-                        : ActivationScreen(
-                            onActivated: (_) => _refreshLicense(),
-                          );
-                    return MediaQuery(
-                      data: MediaQuery.of(context).copyWith(
-                        textScaler: TextScaler.linear(settings.textScaleFactor),
-                      ),
-                      child: child,
-                    );
-                  },
-                )
-              : MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    textScaler: TextScaler.linear(settings.textScaleFactor),
+                    },
+                  )
+                : MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(settings.textScaleFactor),
+                    ),
+                    child: HomeScreen(
+                      textScaleFactor: settings.textScaleFactor,
+                    ),
                   ),
-                  child: HomeScreen(textScaleFactor: settings.textScaleFactor),
-                ),
+          ),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
