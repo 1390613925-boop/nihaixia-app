@@ -1,6 +1,6 @@
 # Paths that define the private distribution layer. The upstream sync workflow
 # restores these paths after merging upstream, so released APKs keep the card
-# gate, Qihuang branding, own update feed, release signing and R8 settings.
+# gate, Miyuanfang branding, own update feed, release signing and R8 settings.
 lib/services/license_service.dart
 lib/config/distribution_config.dart
 lib/screens/activation_screen.dart
@@ -12,6 +12,10 @@ test/services/update_service_test.dart
 android/app/build.gradle.kts
 android/app/proguard-rules.pro
 android/app/src/main/AndroidManifest.xml
+android/app/src/main/res/drawable/launch_background.xml
+android/app/src/main/res/drawable-v21/launch_background.xml
+android/app/src/main/res/drawable-nodpi
+android/app/src/main/res/values-v31
 android/app/src/main/res/drawable-hdpi
 android/app/src/main/res/drawable-mdpi
 android/app/src/main/res/drawable-xhdpi
@@ -26,4 +30,4 @@ android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 android/app/src/main/res/values/colors.xml
 assets/branding
 assets/data/changelog.json
-tool/apply_qihuang_branding.py
+tool/apply_miyuanfang_branding.py
