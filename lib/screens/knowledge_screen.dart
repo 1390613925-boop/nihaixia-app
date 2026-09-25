@@ -103,184 +103,184 @@ class _MeridianTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: _meridianOrder.length,
-      itemBuilder: (context, index) {
-        final name = _meridianOrder[index];
-        final details = DiagnosticRules.meridianDetails[name];
-        if (details == null) return const SizedBox.shrink();
-
-        final color = context.colors.meridianColor(name);
-        final healingTime = DiagnosticRules.meridianHealingTime[name] ?? '';
-        final formulas = details['formulas'] as List<String>;
-
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MeridianDetailScreen(meridian: name),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: _LibraryIntro(
+            icon: Icons.hub_outlined,
+            eyebrow: 'SIX MERIDIANS',
+            title: '六经辨证图谱',
+            description: '按病位与阴阳层次浏览六经，点击进入脉证、治法与常用方剂。',
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+          sliver: SliverGrid.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: .92,
+            ),
+            itemCount: _meridianOrder.length,
+            itemBuilder: (context, index) {
+              final name = _meridianOrder[index];
+              final details = DiagnosticRules.meridianDetails[name]!;
+              final color = context.colors.meridianColor(name);
+              final formulas = details['formulas'] as List<String>;
+              return Material(
+                color: context.colors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(color: context.colors.outlineVariant),
                 ),
-              );
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(left: BorderSide(color: color, width: 4)),
-              ),
-              child: ExpansionTile(
-                leading: Icon(meridianIcon(name), size: 28, color: color),
-                title: Text(
-                  '$name病',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MeridianDetailScreen(meridian: name),
+                    ),
                   ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 2),
-                    Text(
-                      '${details['nature']} · ${details['organ']}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.colors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '核心脉证：${details['keyPulse']}',
-                      style: const TextStyle(fontSize: 12),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 12,
-                          color: context.colors.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            '欲解时：$healingTime',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: context.colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 核心症状
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: (details['coreSymptoms'] as List<String>)
-                              .map(
-                                (s) => Chip(
-                                  label: Text(
-                                    s,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  backgroundColor: context.colors
-                                      .meridianContainer(name),
-                                  side: BorderSide(
-                                    color: context.colors.outlineVariant,
-                                  ),
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              )
-                              .toList(),
+                        Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: context.colors.meridianContainer(name),
+                                borderRadius: BorderRadius.circular(13),
+                              ),
+                              child: Icon(meridianIcon(name), color: color),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              Icons.north_east_rounded,
+                              size: 18,
+                              color: context.colors.onSurfaceVariant,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        // 常用方剂
+                        const Spacer(),
                         Text(
-                          '常用方剂 (${formulas.length})',
+                          '$name病',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
                             color: color,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: formulas
-                              .map(
-                                (f) => ActionChip(
-                                  label: Text(
-                                    f,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  onPressed: () {
-                                    final formula = FormulaRepository.getByName(
-                                      f,
-                                    );
-                                    if (formula != null) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => FormulaDetailScreen(
-                                            formula: formula,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
-                              )
-                              .toList(),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${details['nature']} · ${details['organ']}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.colors.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '${details['keyPulse']}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, height: 1.35),
                         ),
                         const SizedBox(height: 8),
-                        // 查看详情按钮
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      MeridianDetailScreen(meridian: name),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.arrow_forward, size: 16),
-                            label: const Text(
-                              '查看详情',
-                              style: TextStyle(fontSize: 12),
-                            ),
+                        Text(
+                          '${formulas.length} 首常用方',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: color,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
+}
+
+class _LibraryIntro extends StatelessWidget {
+  final IconData icon;
+  final String eyebrow;
+  final String title;
+  final String description;
+  const _LibraryIntro({
+    required this.icon,
+    required this.eyebrow,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: context.colors.primary,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: context.colors.onPrimary.withValues(alpha: .14),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Icon(icon, color: context.colors.onPrimary),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eyebrow,
+                style: TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 1.4,
+                  color: context.colors.onPrimary.withValues(alpha: .68),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: context.colors.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.4,
+                  color: context.colors.onPrimary.withValues(alpha: .8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _FormulaTab extends StatefulWidget {
@@ -434,24 +434,25 @@ class _FormulaTabState extends State<_FormulaTab> {
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: GridView.builder(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: .92,
+            ),
             itemCount: formulas.length,
             itemBuilder: (context, index) {
               final f = formulas[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  title: Text(
-                    f.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    '${f.meridian} · ${f.category}\n${f.indication.length > 40 ? '${f.indication.substring(0, 40)}...' : f.indication}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  isThreeLine: true,
-                  trailing: const Icon(Icons.chevron_right),
+              return Material(
+                color: context.colors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(color: context.colors.outlineVariant),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
                   onTap: () {
                     Navigator.push(
                       context,
@@ -460,6 +461,61 @@ class _FormulaTabState extends State<_FormulaTab> {
                       ),
                     );
                   },
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.medication_liquid_outlined,
+                              color: context.colors.primary,
+                              size: 24,
+                            ),
+                            const Spacer(),
+                            Icon(
+                              Icons.north_east_rounded,
+                              color: context.colors.onSurfaceVariant,
+                              size: 17,
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text(
+                          f.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${f.meridian} · ${f.category}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.colors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          f.indication,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            height: 1.4,
+                            color: context.colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
@@ -639,8 +695,14 @@ class _HerbTabState extends State<_HerbTab> {
         ),
         // Herb list
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: GridView.builder(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: .95,
+            ),
             itemCount: herbs.length,
             itemBuilder: (context, index) {
               final h = herbs[index];
@@ -648,43 +710,85 @@ class _HerbTabState extends State<_HerbTab> {
               final actionShort = action.length > 40
                   ? '${action.substring(0, 40)}...'
                   : action;
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 3),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer,
-                    child: Text(
-                      h.name.substring(0, 1),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  title: Row(
-                    children: [
-                      Text(
-                        h.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(h.natureIcon, size: 14),
-                    ],
-                  ),
-                  subtitle: Text(
-                    '${h.flavor.isNotEmpty ? "味${h.flavor} " : ""}'
-                    '${h.meridians.isNotEmpty ? "归${h.meridians.join(" ")} " : ""}'
-                    '${h.category}\n$actionShort',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  isThreeLine: true,
-                  trailing: const Icon(Icons.chevron_right, size: 20),
+              return Material(
+                color: context.colors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(color: context.colors.outlineVariant),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => HerbDetailScreen(herb: h),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: context.colors.primaryContainer,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                h.name.substring(0, 1),
+                                style: TextStyle(
+                                  color: context.colors.primary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              h.natureIcon,
+                              size: 18,
+                              color: context.colors.primary,
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text(
+                          h.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 17,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${h.flavor.isNotEmpty ? "味${h.flavor} · " : ""}${h.category}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.colors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          actionShort,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            height: 1.4,
+                            color: context.colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

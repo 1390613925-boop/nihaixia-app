@@ -16,65 +16,146 @@ class NeijingKnowledgeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('黄帝内经 · 速查'),
-          actions: [
-            IconButton(
-              tooltip: '结构化条目（十维度）',
-              icon: const Icon(Icons.grid_view_outlined),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const NeijingEntriesScreen(),
-                  ),
-                );
-              },
+      child: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.colors.primary,
+              borderRadius: BorderRadius.circular(20),
             ),
-            IconButton(
-              tooltip: '全文阅读库',
-              icon: const Icon(Icons.menu_book_outlined),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const NeijingLibraryScreen(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '内经索引台',
+                  style: TextStyle(
+                    color: context.colors.onPrimary,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
                   ),
-                );
-              },
-            ),
-            IconButton(
-              tooltip: '全文搜索',
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const NeijingSearchScreen(),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '脏象、望诊与脉诊资料，亦可进入全文和结构化条目。',
+                  style: TextStyle(
+                    color: context.colors.onPrimary.withValues(alpha: .78),
+                    fontSize: 11,
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    _NeijingAction(
+                      label: '条目',
+                      icon: Icons.grid_view_outlined,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NeijingEntriesScreen(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _NeijingAction(
+                      label: '全文',
+                      icon: Icons.menu_book_outlined,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NeijingLibraryScreen(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _NeijingAction(
+                      label: '检索',
+                      icon: Icons.search,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NeijingSearchScreen(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: '脏象', icon: Icon(Icons.account_tree_outlined)),
-              Tab(text: '望诊', icon: Icon(Icons.remove_red_eye_outlined)),
-              Tab(text: '脉诊', icon: Icon(Icons.monitor_heart_outlined)),
-            ],
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            _ZangFuTab(),
-            _WangZhenTab(),
-            _MaiZhenTab(),
-          ],
-        ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: context.colors.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: TabBar(
+              dividerHeight: 0,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              tabs: [
+                Tab(text: '脏象'),
+                Tab(text: '望诊'),
+                Tab(text: '脉诊'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Expanded(
+            child: TabBarView(
+              children: [_ZangFuTab(), _WangZhenTab(), _MaiZhenTab()],
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _NeijingAction extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _NeijingAction({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Material(
+      color: context.colors.onPrimary.withValues(alpha: .13),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: context.colors.onPrimary),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  color: context.colors.onPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -89,9 +170,7 @@ class _ZangFuTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        _InfoBanner(
-          text: '《灵兰秘典论》以官职喻十二脏：主明则下安，以此养生则寿。',
-        ),
+        _InfoBanner(text: '《灵兰秘典论》以官职喻十二脏：主明则下安，以此养生则寿。'),
         const SizedBox(height: 8),
         for (final card in kZangFuCards) _ZangFuCardTile(card: card),
         const SizedBox(height: 8),
@@ -155,10 +234,7 @@ class _ZangFuCardTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            card.niShi,
-            style: const TextStyle(fontSize: 12, height: 1.55),
-          ),
+          Text(card.niShi, style: const TextStyle(fontSize: 12, height: 1.55)),
           const SizedBox(height: 6),
           Text(
             '出处：${card.source}',
@@ -201,7 +277,8 @@ class _WangZhenTab extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       children: [
         _InfoBanner(
-          text: '望诊要领：面之五色须有光泽（精微象），见病色则寿不久。'
+          text:
+              '望诊要领：面之五色须有光泽（精微象），见病色则寿不久。'
               '「视精明、察五色」为诊法之首。',
         ),
         const SizedBox(height: 10),
@@ -269,10 +346,7 @@ class _WangZhenTab extends StatelessWidget {
                         ),
                         Text(
                           e.source,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: cs.outline,
-                          ),
+                          style: TextStyle(fontSize: 10, color: cs.outline),
                         ),
                       ],
                     ),
@@ -296,8 +370,11 @@ class _WangZhenTab extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
             elevation: 1,
             child: ListTile(
-              leading: Icon(Icons.visibility_outlined,
-                  color: cs.primary, size: 22),
+              leading: Icon(
+                Icons.visibility_outlined,
+                color: cs.primary,
+                size: 22,
+              ),
               title: Text(
                 '${e.zone} → ${e.zangFu}',
                 style: const TextStyle(
@@ -487,8 +564,11 @@ class _MaiZhenTab extends StatelessWidget {
             elevation: 1,
             color: cs.errorContainer.withValues(alpha: 0.35),
             child: ListTile(
-              leading: Icon(Icons.warning_amber_rounded,
-                  color: cs.error, size: 22),
+              leading: Icon(
+                Icons.warning_amber_rounded,
+                color: cs.error,
+                size: 22,
+              ),
               title: Text(
                 e.name,
                 style: TextStyle(

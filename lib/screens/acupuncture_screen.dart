@@ -50,16 +50,69 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
     return Column(
       children: [
         Container(
-          color: Theme.of(context).colorScheme.surface,
-          child: TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(text: '穴位处方', icon: Icon(Icons.healing)),
-              Tab(text: '透针透穴', icon: Icon(Icons.timeline)),
-              Tab(text: '穴位讲解', icon: Icon(Icons.explore)),
+          margin: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.colors.primary,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.adjust_rounded,
+                color: context.colors.onPrimary,
+                size: 32,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '针灸检索台',
+                      style: TextStyle(
+                        color: context.colors.onPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '按症状、透穴法或经络浏览穴位资料',
+                      style: TextStyle(
+                        color: context.colors.onPrimary.withValues(alpha: .78),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: context.colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            dividerHeight: 0,
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: BoxDecoration(
+              color: context.colors.surface,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            tabs: const [
+              Tab(text: '症状取穴'),
+              Tab(text: '透针法'),
+              Tab(text: '穴位库'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
         Expanded(
           child: TabBarView(
             controller: _tabController,
@@ -196,7 +249,10 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
                 children: [
-                  Text('别名: ', style: TextStyle(color: context.colors.onSurfaceVariant)),
+                  Text(
+                    '别名: ',
+                    style: TextStyle(color: context.colors.onSurfaceVariant),
+                  ),
                   Text(entry.aliases.join('、')),
                 ],
               ),
@@ -212,12 +268,14 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
                 return GestureDetector(
                   onTap: () {
                     final detail = AcupointRepository.findByName(
-                        AcupointRepository.canonicalOf(a.name));
+                      AcupointRepository.canonicalOf(a.name),
+                    );
                     if (detail != null) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => AcupointDetailScreen(acupoint: detail),
+                          builder: (_) =>
+                              AcupointDetailScreen(acupoint: detail),
                         ),
                       );
                     } else {
@@ -244,7 +302,10 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Text(
                 '备注: ${entry.notes}',
-                style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12),
+                style: TextStyle(
+                  color: context.colors.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ),
 
@@ -330,12 +391,14 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
                     return GestureDetector(
                       onTap: () {
                         final detail = AcupointRepository.findByName(
-                            AcupointRepository.canonicalOf(name));
+                          AcupointRepository.canonicalOf(name),
+                        );
                         if (detail != null) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => AcupointDetailScreen(acupoint: detail),
+                              builder: (_) =>
+                                  AcupointDetailScreen(acupoint: detail),
                             ),
                           );
                         } else {
@@ -500,7 +563,10 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             '共 ${acupoints.length} 个穴位',
-            style: TextStyle(fontSize: 12, color: context.colors.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: 12,
+              color: context.colors.onSurfaceVariant,
+            ),
           ),
         ),
 
@@ -524,7 +590,8 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
 
   Widget _buildAcupointCard(AcupointDetail acupoint) {
     final colorScheme = Theme.of(context).colorScheme;
-    final hasDetail = acupoint.description.isNotEmpty || acupoint.location.isNotEmpty;
+    final hasDetail =
+        acupoint.description.isNotEmpty || acupoint.location.isNotEmpty;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
@@ -538,7 +605,10 @@ class _AcupunctureScreenState extends State<AcupunctureScreen>
             const SizedBox(width: 8),
             if (acupoint.meridian.isNotEmpty)
               Chip(
-                label: Text(acupoint.meridian, style: const TextStyle(fontSize: 10)),
+                label: Text(
+                  acupoint.meridian,
+                  style: const TextStyle(fontSize: 10),
+                ),
                 backgroundColor: colorScheme.primaryContainer,
                 labelStyle: TextStyle(color: colorScheme.onPrimaryContainer),
                 visualDensity: VisualDensity.compact,
