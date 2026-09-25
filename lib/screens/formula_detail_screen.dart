@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/formula.dart';
 import '../theme/app_colors.dart';
+import '../widgets/detail_anchor_rail.dart';
 import '../models/bookmark.dart';
 import '../data/database_helper.dart';
 import '../data/formula_repository.dart';
@@ -66,6 +67,7 @@ class FormulaDetailScreen extends StatefulWidget {
 }
 
 class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
+  final ScrollController _detailController = ScrollController();
   bool _isBookmarked = false;
   bool _loadingMentions = true;
   List<ClassicLecture> _shanghanHits = [];
@@ -78,6 +80,12 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
     super.initState();
     _checkBookmark();
     _loadMentions();
+  }
+
+  @override
+  void dispose() {
+    _detailController.dispose();
+    super.dispose();
   }
 
   void _checkBookmark() async {
@@ -235,220 +243,236 @@ class _FormulaDetailScreenState extends State<FormulaDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: context.colors.outlineVariant,
-                    width: .5,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    f.name,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: cs.onPrimaryContainer,
-                    ),
-                  ),
-                  if (f.alias.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      f.alias,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.colors.onSurfaceVariant,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _detailController,
+            padding: const EdgeInsets.fromLTRB(16, 16, 38, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: context.colors.outlineVariant,
+                        width: .5,
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 8),
-                  Row(
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Tag(label: f.meridian, color: cs.tertiary),
-                      const SizedBox(width: 8),
-                      _Tag(label: f.category, color: cs.secondary),
+                      Text(
+                        f.name,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: cs.onPrimaryContainer,
+                        ),
+                      ),
+                      if (f.alias.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          f.alias,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _Tag(label: f.meridian, color: cs.tertiary),
+                          const SizedBox(width: 8),
+                          _Tag(label: f.category, color: cs.secondary),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
+                ),
+                const SizedBox(height: 20),
 
-            // 组成
-            _SectionTitle(title: '组成'),
-            const SizedBox(height: 8),
-            ...f.components.map((c) {
-              final herb = HerbRepository.getByName(c.name);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: InkWell(
-                  onTap: herb != null
-                      ? () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => HerbDetailScreen(herb: herb),
-                          ),
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
+                // 组成
+                _SectionTitle(title: '组成'),
+                const SizedBox(height: 8),
+                ...f.components.map((c) {
+                  final herb = HerbRepository.getByName(c.name);
+                  return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          margin: const EdgeInsets.only(top: 6),
-                          decoration: BoxDecoration(
-                            color: cs.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: cs.onSurface,
+                    child: InkWell(
+                      onTap: herb != null
+                          ? () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => HerbDetailScreen(herb: herb),
                               ),
-                              children: [
-                                TextSpan(
-                                  text: c.name,
+                            )
+                          : null,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.only(top: 6),
+                              decoration: BoxDecoration(
+                                color: cs.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: herb != null
-                                        ? cs.primary
-                                        : cs.onSurface,
-                                    decoration: herb != null
-                                        ? TextDecoration.underline
-                                        : null,
+                                    fontSize: 14,
+                                    color: cs.onSurface,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: c.name,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: herb != null
+                                            ? cs.primary
+                                            : cs.onSurface,
+                                        decoration: herb != null
+                                            ? TextDecoration.underline
+                                            : null,
+                                      ),
+                                    ),
+                                    if (c.dosage.isNotEmpty)
+                                      TextSpan(text: '  ${c.dosage}'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (c.role.isNotEmpty)
+                              Expanded(
+                                child: Text(
+                                  c.role,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: context.colors.onSurfaceVariant,
                                   ),
                                 ),
-                                if (c.dosage.isNotEmpty)
-                                  TextSpan(text: '  ${c.dosage}'),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (c.role.isNotEmpty)
-                          Expanded(
-                            child: Text(
-                              c.role,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: context.colors.onSurfaceVariant,
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 20),
+
+                // 适应证
+                _SectionTitle(title: '适应证'),
+                const SizedBox(height: 8),
+                Text(
+                  f.indication,
+                  style: const TextStyle(fontSize: 14, height: 1.6),
+                ),
+                const SizedBox(height: 20),
+
+                // 禁忌
+                if (f.contraindication.isNotEmpty) ...[
+                  _SectionTitle(title: '禁忌'),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.colors.dangerContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      f.contraindication,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: cs.onErrorContainer,
+                        height: 1.5,
+                      ),
                     ),
                   ),
-                ),
-              );
-            }),
-            const SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                ],
 
-            // 适应证
-            _SectionTitle(title: '适应证'),
-            const SizedBox(height: 8),
-            Text(
-              f.indication,
-              style: const TextStyle(fontSize: 14, height: 1.6),
+                // 煎服法
+                if (f.dosage.isNotEmpty) ...[
+                  _SectionTitle(title: '煎服法'),
+                  const SizedBox(height: 8),
+                  Text(
+                    f.dosage,
+                    style: const TextStyle(fontSize: 14, height: 1.6),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // 倪海厦解读
+                if (f.explanation.isNotEmpty) ...[
+                  _SectionTitle(title: '倪海厦解读'),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.colors.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      f.explanation,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: cs.onTertiaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // 见于经典
+                const SizedBox(height: 20),
+                _SectionTitle(title: '见于经典'),
+                const SizedBox(height: 8),
+                if (_loadingMentions)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: CircularProgressIndicator(),
+                  )
+                else if (_shanghanHits.isEmpty && _jinguiHits.isEmpty)
+                  Text(
+                    '暂未在该模块经典中找到出处',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  )
+                else ...[
+                  if (_shanghanHits.isNotEmpty)
+                    ..._buildBookGroup('伤寒论', _shanghanHits),
+                  if (_jinguiHits.isNotEmpty)
+                    ..._buildBookGroup('金匮要略', _jinguiHits),
+                ],
+              ],
             ),
-            const SizedBox(height: 20),
-
-            // 禁忌
-            if (f.contraindication.isNotEmpty) ...[
-              _SectionTitle(title: '禁忌'),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.colors.dangerContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  f.contraindication,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: cs.onErrorContainer,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            // 煎服法
-            if (f.dosage.isNotEmpty) ...[
-              _SectionTitle(title: '煎服法'),
-              const SizedBox(height: 8),
-              Text(f.dosage, style: const TextStyle(fontSize: 14, height: 1.6)),
-              const SizedBox(height: 20),
-            ],
-
-            // 倪海厦解读
-            if (f.explanation.isNotEmpty) ...[
-              _SectionTitle(title: '倪海厦解读'),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  f.explanation,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.6,
-                    color: cs.onTertiaryContainer,
-                  ),
-                ),
-              ),
-            ],
-
-            // 见于经典
-            const SizedBox(height: 20),
-            _SectionTitle(title: '见于经典'),
-            const SizedBox(height: 8),
-            if (_loadingMentions)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: CircularProgressIndicator(),
-              )
-            else if (_shanghanHits.isEmpty && _jinguiHits.isEmpty)
-              Text(
-                '暂未在该模块经典中找到出处',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: context.colors.onSurfaceVariant,
-                ),
-              )
-            else ...[
-              if (_shanghanHits.isNotEmpty)
-                ..._buildBookGroup('伤寒论', _shanghanHits),
-              if (_jinguiHits.isNotEmpty)
-                ..._buildBookGroup('金匮要略', _jinguiHits),
-            ],
-          ],
-        ),
+          ),
+          Positioned(
+            right: 5,
+            top: 96,
+            child: DetailAnchorRail(
+              controller: _detailController,
+              labels: const ['基本', '组成', '主治', '用法', '经典'],
+            ),
+          ),
+        ],
       ),
     );
   }

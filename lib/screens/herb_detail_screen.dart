@@ -8,6 +8,7 @@ import '../data/database_helper.dart';
 import '../data/medical_case_data.dart';
 import '../data/critical_illness_data.dart';
 import 'herb_related_screens.dart';
+import '../widgets/detail_anchor_rail.dart';
 
 class HerbDetailScreen extends StatefulWidget {
   final Herb herb;
@@ -23,12 +24,19 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
   List<MedicalCase> _relatedCases = const [];
   bool _casesReady = false;
   List<CriticalIllness> _relatedCritical = const [];
+  final ScrollController _detailController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _checkBookmark();
     _loadBacklinks();
+  }
+
+  @override
+  void dispose() {
+    _detailController.dispose();
+    super.dispose();
   }
 
   void _checkBookmark() async {
@@ -137,285 +145,311 @@ class _HerbDetailScreenState extends State<HerbDetailScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Stack(
         children: [
-          // Header: name + category + flavor
-          _DetailSection(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    herb.name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
+          ListView(
+            controller: _detailController,
+            padding: const EdgeInsets.fromLTRB(16, 16, 38, 24),
+            children: [
+              // Header: name + category + flavor
+              _DetailSection(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Chip(
-                        label: Text(herb.category),
-                        backgroundColor: cs.primaryContainer,
-                        labelStyle: TextStyle(color: cs.onPrimaryContainer),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
+                      Text(
+                        herb.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      if (herb.flavor.isNotEmpty)
-                        Chip(
-                          label: Text('味${herb.flavor}'),
-                          backgroundColor: cs.secondaryContainer,
-                          labelStyle: TextStyle(color: cs.onSecondaryContainer),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      if (herb.meridians.isNotEmpty)
-                        Chip(
-                          label: Text('归经: ${herb.meridians.join(" ")}'),
-                          backgroundColor: cs.tertiaryContainer,
-                          labelStyle: TextStyle(color: cs.onTertiaryContainer),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                        ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Chip(
+                            label: Text(herb.category),
+                            backgroundColor: cs.primaryContainer,
+                            labelStyle: TextStyle(color: cs.onPrimaryContainer),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          if (herb.flavor.isNotEmpty)
+                            Chip(
+                              label: Text('味${herb.flavor}'),
+                              backgroundColor: cs.secondaryContainer,
+                              labelStyle: TextStyle(
+                                color: cs.onSecondaryContainer,
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          if (herb.meridians.isNotEmpty)
+                            Chip(
+                              label: Text('归经: ${herb.meridians.join(" ")}'),
+                              backgroundColor: cs.tertiaryContainer,
+                              labelStyle: TextStyle(
+                                color: cs.onTertiaryContainer,
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
 
-          // 性味
-          if (herb.nature != null) _buildSection('性味', herb.nature!, cs),
+              // 性味
+              if (herb.nature != null) _buildSection('性味', herb.nature!, cs),
 
-          // 主治
-          if (herb.action != null) _buildSection('主治', herb.action!, cs),
+              // 主治
+              if (herb.action != null) _buildSection('主治', herb.action!, cs),
 
-          // 本经原文
-          if (herb.original != null) _buildSection('本经原文', herb.original!, cs),
+              // 本经原文
+              if (herb.original != null)
+                _buildSection('本经原文', herb.original!, cs),
 
-          // 倪注
-          if (herb.niNote != null) _buildSection('倪注', herb.niNote!, cs),
+              // 倪注
+              if (herb.niNote != null) _buildSection('倪注', herb.niNote!, cs),
 
-          // 容川注
-          if (herb.rongchuan != null) _buildSection('容川注', herb.rongchuan!, cs),
+              // 容川注
+              if (herb.rongchuan != null)
+                _buildSection('容川注', herb.rongchuan!, cs),
 
-          // 用量
-          if (herb.dosage != null) _buildSection('用量', herb.dosage!, cs),
+              // 用量
+              if (herb.dosage != null) _buildSection('用量', herb.dosage!, cs),
 
-          // 禁忌
-          if (herb.contraindication != null)
-            _DetailSection(
-              color: cs.errorContainer,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              // 禁忌
+              if (herb.contraindication != null)
+                _DetailSection(
+                  color: cs.errorContainer,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.warning_amber, color: cs.onErrorContainer),
-                        const SizedBox(width: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber,
+                              color: cs.onErrorContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '禁忌',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: cs.onErrorContainer,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         Text(
-                          '禁忌',
+                          herb.contraindication!,
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            height: 1.6,
                             color: cs.onErrorContainer,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      herb.contraindication!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.6,
-                        color: cs.onErrorContainer,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-          // 倪师临床口述
-          if (herb.clinicalNotes != null)
-            _DetailSection(
-              color: cs.tertiaryContainer,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              // 倪师临床口述
+              if (herb.clinicalNotes != null)
+                _DetailSection(
+                  color: cs.tertiaryContainer,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.record_voice_over,
-                          color: cs.onTertiaryContainer,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.record_voice_over,
+                              color: cs.onTertiaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '倪师临床口述',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: cs.onTertiaryContainer,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(height: 8),
                         Text(
-                          '倪师临床口述',
+                          herb.clinicalNotes!,
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            height: 1.6,
                             color: cs.onTertiaryContainer,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      herb.clinicalNotes!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.6,
-                        color: cs.onTertiaryContainer,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-          // 历代医家注释
-          if (herb.historicalNotes != null && herb.historicalNotes!.isNotEmpty)
-            _DetailSection(
-              color: cs.surfaceContainerHighest,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              // 历代医家注释
+              if (herb.historicalNotes != null &&
+                  herb.historicalNotes!.isNotEmpty)
+                _DetailSection(
+                  color: cs.surfaceContainerHighest,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.history_edu, color: cs.onSurfaceVariant),
-                        const SizedBox(width: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.history_edu, color: cs.onSurfaceVariant),
+                            const SizedBox(width: 8),
+                            Text(
+                              '历代医家注释',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         Text(
-                          '历代医家注释',
+                          herb.historicalNotes!,
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            height: 1.6,
                             color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      herb.historicalNotes!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.6,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-          // 药物比较
-          if (herb.herbComparisons.isNotEmpty)
-            _DetailSection(
-              color: context.colors.primaryContainer,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              // 药物比较
+              if (herb.herbComparisons.isNotEmpty)
+                _DetailSection(
+                  color: context.colors.primaryContainer,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.compare_arrows, color: cs.primary),
-                        const SizedBox(width: 8),
-                        Text(
-                          '药物比较',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: cs.primary,
+                        Row(
+                          children: [
+                            Icon(Icons.compare_arrows, color: cs.primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              '药物比较',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: cs.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ...herb.herbComparisons.map(
+                          (c) => Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              '· $c',
+                              style: TextStyle(
+                                fontSize: 14,
+                                height: 1.5,
+                                color: cs.onSurface,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    ...herb.herbComparisons.map(
-                      (c) => Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          '· $c',
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                            color: cs.onSurface,
+                  ),
+                ),
+
+              // 相关内容入口（三级结构第一级：药物页仅放入口按钮，列表/详情各自独立加载）
+              _DetailSection(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      _entryButton(
+                        context,
+                        icon: Icons.article_outlined,
+                        label: '关联医案',
+                        count: _casesReady ? _relatedCases.length : null,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HerbRelatedCasesScreen(herb: herb),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      _entryDivider(cs),
+                      _entryButton(
+                        context,
+                        icon: Icons.menu_book,
+                        label: '关联闭门课',
+                        count: _relatedCritical.length,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                HerbRelatedCriticalScreen(herb: herb),
+                          ),
+                        ),
+                      ),
+                      _entryDivider(cs),
+                      _entryButton(
+                        context,
+                        icon: Icons.medication,
+                        label: '含此药方剂',
+                        count: relatedFormulas.length,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                HerbRelatedFormulasScreen(herb: herb),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-
-          // 相关内容入口（三级结构第一级：药物页仅放入口按钮，列表/详情各自独立加载）
-          _DetailSection(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  _entryButton(
-                    context,
-                    icon: Icons.article_outlined,
-                    label: '关联医案',
-                    count: _casesReady ? _relatedCases.length : null,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => HerbRelatedCasesScreen(herb: herb),
-                      ),
-                    ),
-                  ),
-                  _entryDivider(cs),
-                  _entryButton(
-                    context,
-                    icon: Icons.menu_book,
-                    label: '关联闭门课',
-                    count: _relatedCritical.length,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => HerbRelatedCriticalScreen(herb: herb),
-                      ),
-                    ),
-                  ),
-                  _entryDivider(cs),
-                  _entryButton(
-                    context,
-                    icon: Icons.medication,
-                    label: '含此药方剂',
-                    count: relatedFormulas.length,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => HerbRelatedFormulasScreen(herb: herb),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            ],
+          ),
+          Positioned(
+            right: 5,
+            top: 96,
+            child: DetailAnchorRail(
+              controller: _detailController,
+              labels: const ['基本', '主治', '原文', '注释', '关联'],
             ),
           ),
         ],
