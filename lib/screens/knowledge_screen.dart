@@ -44,16 +44,33 @@ class _KnowledgeScreenState extends State<KnowledgeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('知识库'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('资料中心', style: TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              '经方 · 本草 · 腧穴 · 经典',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          dividerHeight: 0,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicator: BoxDecoration(
+            color: context.colors.primaryContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
           tabs: const [
             Tab(text: '六经', icon: Icon(Icons.public)),
             Tab(text: '方剂', icon: Icon(Icons.medication)),
             Tab(text: '本草', icon: Icon(Icons.eco)),
             Tab(text: '针灸', icon: Icon(Icons.healing)),
             Tab(text: '内经', icon: Icon(Icons.menu_book)),
-            Tab(text: '伤寒金匮', icon: Icon(Icons.auto_stories)),
+            Tab(text: '经典', icon: Icon(Icons.auto_stories)),
             Tab(text: '搜索', icon: Icon(Icons.search)),
           ],
         ),
@@ -130,7 +147,10 @@ class _MeridianTab extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${details['nature']} · ${details['organ']}',
-                      style: TextStyle(fontSize: 12, color: context.colors.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.colors.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -141,12 +161,19 @@ class _MeridianTab extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        Icon(Icons.access_time, size: 12, color: context.colors.onSurfaceVariant),
+                        Icon(
+                          Icons.access_time,
+                          size: 12,
+                          color: context.colors.onSurfaceVariant,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '欲解时：$healingTime',
-                            style: TextStyle(fontSize: 10, color: context.colors.onSurfaceVariant),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: context.colors.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
@@ -164,39 +191,62 @@ class _MeridianTab extends StatelessWidget {
                           spacing: 6,
                           runSpacing: 4,
                           children: (details['coreSymptoms'] as List<String>)
-                              .map((s) => Chip(
-                                    label: Text(s, style: const TextStyle(fontSize: 12)),
-                                    backgroundColor: context.colors.meridianContainer(name),
-                                    side: BorderSide(color: context.colors.outlineVariant),
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    visualDensity: VisualDensity.compact,
-                                  ))
+                              .map(
+                                (s) => Chip(
+                                  label: Text(
+                                    s,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  backgroundColor: context.colors
+                                      .meridianContainer(name),
+                                  side: BorderSide(
+                                    color: context.colors.outlineVariant,
+                                  ),
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              )
                               .toList(),
                         ),
                         const SizedBox(height: 10),
                         // 常用方剂
-                        Text('常用方剂 (${formulas.length})',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14, color: color)),
+                        Text(
+                          '常用方剂 (${formulas.length})',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: color,
+                          ),
+                        ),
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 8,
                           runSpacing: 4,
                           children: formulas
-                              .map((f) => ActionChip(
-                                    label: Text(f, style: const TextStyle(fontSize: 12)),
-                                    onPressed: () {
-                                      final formula = FormulaRepository.getByName(f);
-                                      if (formula != null) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => FormulaDetailScreen(formula: formula),
+                              .map(
+                                (f) => ActionChip(
+                                  label: Text(
+                                    f,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  onPressed: () {
+                                    final formula = FormulaRepository.getByName(
+                                      f,
+                                    );
+                                    if (formula != null) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => FormulaDetailScreen(
+                                            formula: formula,
                                           ),
-                                        );
-                                      }
-                                    },
-                                  ))
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              )
                               .toList(),
                         ),
                         const SizedBox(height: 8),
@@ -208,12 +258,16 @@ class _MeridianTab extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => MeridianDetailScreen(meridian: name),
+                                  builder: (_) =>
+                                      MeridianDetailScreen(meridian: name),
                                 ),
                               );
                             },
                             icon: const Icon(Icons.arrow_forward, size: 16),
-                            label: const Text('查看详情', style: TextStyle(fontSize: 12)),
+                            label: const Text(
+                              '查看详情',
+                              style: TextStyle(fontSize: 12),
+                            ),
                           ),
                         ),
                       ],
@@ -240,16 +294,28 @@ class _FormulaTabState extends State<_FormulaTab> {
   String _searchQuery = '';
   final TextEditingController _searchCtrl = TextEditingController();
 
-  static const _meridians = [
-    '全部', '太阳', '阳明', '少阳', '太阴', '少阴', '厥阴'
-  ];
+  static const _meridians = ['全部', '太阳', '阳明', '少阳', '太阴', '少阴', '厥阴'];
 
   static const _categories = [
-    '全部', '金疮药', '倪海厦经验方',
-    '解表剂', '和解剂', '清热剂', '泻下剂',
-    '温里剂', '补益剂', '理气剂', '活血化瘀剂',
-    '祛湿剂', '化痰剂', '寒热并用剂', '外用剂',
-    '祛风剂', '安神剂', '止血剂', '驱虫剂',
+    '全部',
+    '金疮药',
+    '倪海厦经验方',
+    '解表剂',
+    '和解剂',
+    '清热剂',
+    '泻下剂',
+    '温里剂',
+    '补益剂',
+    '理气剂',
+    '活血化瘀剂',
+    '祛湿剂',
+    '化痰剂',
+    '寒热并用剂',
+    '外用剂',
+    '祛风剂',
+    '安神剂',
+    '止血剂',
+    '驱虫剂',
   ];
 
   List<Formula> _getFormulas() {
@@ -262,12 +328,15 @@ class _FormulaTabState extends State<_FormulaTab> {
     }
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
-      list = list.where((f) =>
-          f.name.toLowerCase().contains(q) ||
-          f.indication.toLowerCase().contains(q) ||
-          f.components.any((c) => c.name.toLowerCase().contains(q)) ||
-          f.keywords.any((k) => k.toLowerCase().contains(q))
-      ).toList();
+      list = list
+          .where(
+            (f) =>
+                f.name.toLowerCase().contains(q) ||
+                f.indication.toLowerCase().contains(q) ||
+                f.components.any((c) => c.name.toLowerCase().contains(q)) ||
+                f.keywords.any((k) => k.toLowerCase().contains(q)),
+          )
+          .toList();
     }
     return list;
   }
@@ -296,7 +365,10 @@ class _FormulaTabState extends State<_FormulaTab> {
                     )
                   : null,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -411,7 +483,18 @@ class _HerbTabState extends State<_HerbTab> {
   final TextEditingController _searchCtrl = TextEditingController();
 
   static const _meridians = [
-    '全部', '肺', '心', '肝', '脾', '肾', '胃', '胆', '大肠', '小肠', '膀胱', '三焦'
+    '全部',
+    '肺',
+    '心',
+    '肝',
+    '脾',
+    '肾',
+    '胃',
+    '胆',
+    '大肠',
+    '小肠',
+    '膀胱',
+    '三焦',
   ];
 
   List<Herb> _getHerbs() {
@@ -423,13 +506,17 @@ class _HerbTabState extends State<_HerbTab> {
       herbs = herbs.where((h) => h.natureCategory == _selectedNature).toList();
     }
     if (_selectedMeridian != '全部') {
-      herbs = herbs.where((h) => h.meridians.contains(_selectedMeridian)).toList();
+      herbs = herbs
+          .where((h) => h.meridians.contains(_selectedMeridian))
+          .toList();
     }
     if (_searchQuery.isNotEmpty) {
       // 走 HerbRepository.matchesQuery（含异名归一）。
       // 此前此处自行拼字符串匹配，漏了 canonicalOf，导致 103 个异名中 74 个在此页搜不到
       //（例：茈胡 → 应命中柴胡）。禁止改回本地匹配。
-      herbs = herbs.where((h) => HerbRepository.matchesQuery(h, _searchQuery)).toList();
+      herbs = herbs
+          .where((h) => HerbRepository.matchesQuery(h, _searchQuery))
+          .toList();
     }
     return herbs;
   }
@@ -460,7 +547,10 @@ class _HerbTabState extends State<_HerbTab> {
                     )
                   : null,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -500,7 +590,8 @@ class _HerbTabState extends State<_HerbTab> {
             itemBuilder: (context, index) {
               if (index < natures.length) {
                 final n = natures[index];
-                final selected = n == _selectedNature && _selectedMeridian == '全部';
+                final selected =
+                    n == _selectedNature && _selectedMeridian == '全部';
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: ChoiceChip(
@@ -554,14 +645,16 @@ class _HerbTabState extends State<_HerbTab> {
             itemBuilder: (context, index) {
               final h = herbs[index];
               final action = h.action ?? '';
-              final actionShort =
-                  action.length > 40 ? '${action.substring(0, 40)}...' : action;
+              final actionShort = action.length > 40
+                  ? '${action.substring(0, 40)}...'
+                  : action;
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 3),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
                     child: Text(
                       h.name.substring(0, 1),
                       style: TextStyle(
@@ -577,10 +670,7 @@ class _HerbTabState extends State<_HerbTab> {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: 6),
-                      Icon(
-                        h.natureIcon,
-                        size: 14,
-                      ),
+                      Icon(h.natureIcon, size: 14),
                     ],
                   ),
                   subtitle: Text(

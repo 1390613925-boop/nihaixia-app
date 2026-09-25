@@ -100,6 +100,26 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
               height: 72,
               indicatorColor: Color(0xFFD2EAE6),
             ),
+            appBarTheme: const AppBarTheme(
+              centerTitle: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Color(0xFFF3F7F6),
+              foregroundColor: Color(0xFF172321),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFFFFFFFF),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFC4D4D1)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFC4D4D1)),
+              ),
+            ),
+            dividerTheme: const DividerThemeData(color: Color(0xFFD7E3E1)),
             extensions: [AppColors.light],
           ),
           darkTheme: ThemeData(
@@ -110,6 +130,12 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
             useMaterial3: true,
             scaffoldBackgroundColor: const Color(0xFF101B1F),
             cardTheme: const CardThemeData(elevation: 0),
+            appBarTheme: const AppBarTheme(
+              centerTitle: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Color(0xFF101B1F),
+            ),
             extensions: [AppColors.dark],
           ),
           home: licenseGateEnabled

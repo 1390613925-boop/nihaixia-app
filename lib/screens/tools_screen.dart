@@ -28,10 +28,56 @@ class ToolsScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('实用工具')),
+      appBar: AppBar(
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('工具中心', style: TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              '临证工具与传统文化分区',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: context.colors.primaryContainer,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: context.colors.outlineVariant),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: context.colors.onPrimary,
+                  child: const Icon(Icons.tune_rounded),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '按用途清晰分区',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text('中医临证工具与传统文化内容分开呈现', style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
           ZoneSection(
             zone: Zone.tcm,
             title: '中医区',
@@ -44,7 +90,9 @@ class ToolsScreen extends StatelessWidget {
                 color: colorScheme.primary,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const DosageConverterScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const DosageConverterScreen(),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -55,7 +103,9 @@ class ToolsScreen extends StatelessWidget {
                 color: colorScheme.error,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const DiagnosisHistoryScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const DiagnosisHistoryScreen(),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -103,7 +153,9 @@ class ToolsScreen extends StatelessWidget {
                 color: Theme.of(context).colorScheme.tertiary,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const SolarTermSectionScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const SolarTermSectionScreen(),
+                  ),
                 ),
               ),
             ],
@@ -208,7 +260,9 @@ class ToolsScreen extends StatelessWidget {
                 color: Theme.of(context).colorScheme.tertiary,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const ShoushengDebtScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const ShoushengDebtScreen(),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -298,21 +352,28 @@ class _ToolCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(subtitle,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant)),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

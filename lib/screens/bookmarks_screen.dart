@@ -76,10 +76,7 @@ class _CreateFolderDialogState extends State<_CreateFolderDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('取消'),
         ),
-        FilledButton(
-          onPressed: _submit,
-          child: const Text('创建'),
-        ),
+        FilledButton(onPressed: _submit, child: const Text('创建')),
       ],
     );
   }
@@ -144,7 +141,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       if (formula != null) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => FormulaDetailScreen(formula: formula)),
+          MaterialPageRoute(
+            builder: (_) => FormulaDetailScreen(formula: formula),
+          ),
         );
         return;
       }
@@ -219,29 +218,39 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           children: [
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('移动到文件夹', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                '移动到文件夹',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.folder_off),
               title: const Text('移出文件夹'),
               onTap: () async {
                 final nav = Navigator.of(ctx);
-                await DatabaseHelper.instance.moveBookmarkToFolder(bookmark.id!, null);
+                await DatabaseHelper.instance.moveBookmarkToFolder(
+                  bookmark.id!,
+                  null,
+                );
                 nav.pop();
                 _loadData();
               },
             ),
-            ..._folders.map((f) => ListTile(
-                  leading: const Icon(Icons.folder),
-                  title: Text(f['name']),
-                  onTap: () async {
-                    final nav = Navigator.of(ctx);
-                    await DatabaseHelper.instance.moveBookmarkToFolder(
-                        bookmark.id!, f['id']);
-                    nav.pop();
-                    _loadData();
-                  },
-                )),
+            ..._folders.map(
+              (f) => ListTile(
+                leading: const Icon(Icons.folder),
+                title: Text(f['name']),
+                onTap: () async {
+                  final nav = Navigator.of(ctx);
+                  await DatabaseHelper.instance.moveBookmarkToFolder(
+                    bookmark.id!,
+                    f['id'],
+                  );
+                  nav.pop();
+                  _loadData();
+                },
+              ),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -257,9 +266,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
     await Clipboard.setData(ClipboardData(text: jsonStr));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('收藏数据已复制到剪贴板（JSON格式）')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('收藏数据已复制到剪贴板（JSON格式）')));
     }
   }
 
@@ -271,7 +280,16 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('收藏'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('个人资料夹', style: TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              '收藏与阅读记录',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -326,24 +344,26 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                       },
                     ),
                   ),
-                  ..._folders.map((f) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: GestureDetector(
-                          onLongPress: () =>
-                              _showDeleteFolderDialog(f['id'], f['name']),
-                          child: FilterChip(
-                            avatar: const Icon(Icons.folder, size: 16),
-                            label: Text(f['name']),
-                            selected: _selectedFolderId == f['id'],
-                            onSelected: (_) {
-                              setState(() {
-                                _selectedFolderId = f['id'];
-                              });
-                              _loadData();
-                            },
-                          ),
+                  ..._folders.map(
+                    (f) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: GestureDetector(
+                        onLongPress: () =>
+                            _showDeleteFolderDialog(f['id'], f['name']),
+                        child: FilterChip(
+                          avatar: const Icon(Icons.folder, size: 16),
+                          label: Text(f['name']),
+                          selected: _selectedFolderId == f['id'],
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedFolderId = f['id'];
+                            });
+                            _loadData();
+                          },
                         ),
-                      )),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -355,18 +375,23 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  ...categories.map((cat) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: FilterChip(
-                          label: Text(cat),
-                          selected: _selectedCategory == cat,
-                          onSelected: (_) {
-                            setState(() =>
-                                _selectedCategory = _selectedCategory == cat ? null : cat);
-                            _loadData();
-                          },
-                        ),
-                      )),
+                  ...categories.map(
+                    (cat) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: FilterChip(
+                        label: Text(cat),
+                        selected: _selectedCategory == cat,
+                        onSelected: (_) {
+                          setState(
+                            () => _selectedCategory = _selectedCategory == cat
+                                ? null
+                                : cat,
+                          );
+                          _loadData();
+                        },
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -387,22 +412,24 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .primaryContainer,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
                             child: Icon(
                               b.category == '方剂'
                                   ? Icons.medication
                                   : b.category == '本草'
-                                      ? Icons.eco
-                                      : Icons.bookmark,
+                                  ? Icons.eco
+                                  : Icons.bookmark,
                               color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           title: Text(
                             b.title,
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                           subtitle: Text(
                             b.content.length > 80
