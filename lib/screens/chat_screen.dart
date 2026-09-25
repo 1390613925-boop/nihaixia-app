@@ -927,7 +927,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _shareResult(DiagnosisResult result) {
     final formula = FormulaRepository.getByName(result.formula);
-    String text = '【岐黄经方辨证结果】\n\n';
+    String text = '【覓源方辨证结果】\n\n';
     text += '六经：${result.displayMeridian}病\n';
     if (result.isCombined) {
       text += '合病：${result.meridian}与${result.combinedMeridian}同病\n';
@@ -955,7 +955,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
       text += '\n';
     }
-    text += '—— 来自「岐黄经方」App';
+    text += '—— 来自「覓源方」App';
     Share.share(text);
   }
 

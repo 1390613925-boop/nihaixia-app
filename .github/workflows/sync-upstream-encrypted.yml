@@ -48,8 +48,8 @@ jobs:
           test -f lib/services/license_service.dart
           test -f lib/screens/activation_screen.dart
           grep -q "1390613925-boop" lib/services/update_service.dart
-          grep -q "岐黄经方" lib/main.dart
-          python3 tool/apply_qihuang_branding.py
+          python3 tool/apply_miyuanfang_branding.py
+          grep -q "覓源方" lib/main.dart
           grep -q "isMinifyEnabled = true" android/app/build.gradle.kts
           grep -q "isShrinkResources = true" android/app/build.gradle.kts
           if ! git diff --quiet upstream/master -- assets/data ':(exclude)assets/data/changelog.json'; then
@@ -69,7 +69,7 @@ jobs:
           git add -A
           git commit -m "chore: sync upstream and preserve encrypted distribution v$VERSION"
           git push origin master
-          git tag -a "$TAG" -m "岐黄经方 $TAG 自动同步加密版"
+          git tag -a "$TAG" -m "覓源方 $TAG 自动同步加密版"
           git push origin "$TAG"
 
       - name: Summary
@@ -79,3 +79,5 @@ jobs:
           else
             echo "No upstream update; no version or release was created." >> "$GITHUB_STEP_SUMMARY"
           fi
+
+

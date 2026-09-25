@@ -78,7 +78,7 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
       builder: (context, _) {
         final settings = SettingsRepository.instance;
         return MaterialApp(
-          title: '岐黄经方',
+          title: '覓源方',
           debugShowCheckedModeBanner: false,
           themeMode: settings.themeMode,
           theme: ThemeData(

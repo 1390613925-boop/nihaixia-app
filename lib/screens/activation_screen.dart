@@ -69,7 +69,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         ),
                         const SizedBox(height: 18),
                         const Text(
-                          '岐黄经方',
+                          '覓源方',
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,

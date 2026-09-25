@@ -1,7 +1,7 @@
 name: nihaisha_app
-description: "岐黄经方 - 倪海厦六经辨证中医诊断助手"
+description: "覓源方 - 倪海厦六经辨证中医诊断助手"
 publish_to: 'none'
-version: 1.11.33+4014
+version: 1.11.34+4015
 
 environment:
   sdk: ^3.12.0

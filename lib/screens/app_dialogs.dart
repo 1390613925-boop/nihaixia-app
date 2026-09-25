@@ -226,7 +226,7 @@ Future<void> exportBookmarks(BuildContext context) async {
     return;
   }
 
-  String text = '【岐黄经方·收藏导出】\n\n';
+  String text = '【覓源方·收藏导出】\n\n';
   for (final b in bookmarks) {
     text += '━━━━━━━━━━━━━━\n';
     text += '${b.title}\n';
@@ -234,7 +234,7 @@ Future<void> exportBookmarks(BuildContext context) async {
     text += '${b.createdAt}\n\n';
     text += '${b.content}\n\n';
   }
-  text += '—— 来自「岐黄经方」App';
+  text += '—— 来自「覓源方」App';
 
   await Share.share(text);
 }
@@ -297,7 +297,7 @@ Future<void> showAboutPage(BuildContext context) async {
                   Icon(Icons.local_hospital, size: 64,
                       color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 8),
-                  const Text('岐黄经方', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('覓源方', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text('v${info.version}', style: TextStyle(color: context.colors.onSurfaceVariant)),
                 ],
@@ -335,7 +335,7 @@ Future<void> showAboutPage(BuildContext context) async {
             const Divider(),
             const SizedBox(height: 8),
             Center(
-              child: Text('© 2024-2026 岐黄经方',
+              child: Text('© 2024-2026 覓源方',
                   style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
             ),
           ],

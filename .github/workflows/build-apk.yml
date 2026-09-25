@@ -91,7 +91,7 @@ jobs:
           test -f lib/services/license_service.dart
           test -f lib/screens/activation_screen.dart
           grep -q "1390613925-boop" lib/services/update_service.dart
-          grep -q "岐黄经方" lib/main.dart
+          grep -q "覓源方" lib/main.dart
           grep -q "isMinifyEnabled = true" android/app/build.gradle.kts
           grep -q "isShrinkResources = true" android/app/build.gradle.kts
 
@@ -151,3 +151,4 @@ jobs:
           fail_on_unmatched_files: false
           files: |
             release-artifacts/*.apk
+

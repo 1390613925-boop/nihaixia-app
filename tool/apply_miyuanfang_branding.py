@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Reapply the personal Qihuang branding after merging upstream."""
+"""Reapply the personal Miyuanfang branding after merging upstream."""
 
 from pathlib import Path
 
 
 TARGETS = (
     Path("pubspec.yaml"),
+    Path("android/app/src/main/AndroidManifest.xml"),
+    Path("lib/main.dart"),
     Path("lib/engine/diagnostic_engine.dart"),
+    Path("lib/screens/activation_screen.dart"),
     Path("lib/screens/chat_screen.dart"),
     Path("lib/screens/app_dialogs.dart"),
     Path("lib/screens/bazi_paipan_screen.dart"),
@@ -23,7 +26,7 @@ def main() -> None:
     changed = []
     for path in TARGETS:
         text = path.read_text(encoding="utf-8")
-        branded = text.replace("汉唐中医", "岐黄经方")
+        branded = text.replace("汉唐中医", "覓源方").replace("岐黄经方", "覓源方")
         if branded != text:
             path.write_text(branded, encoding="utf-8")
             changed.append(str(path))
@@ -31,15 +34,16 @@ def main() -> None:
     residual = [
         str(path)
         for path in TARGETS
-        if "汉唐中医" in path.read_text(encoding="utf-8")
+        if any(name in path.read_text(encoding="utf-8") for name in ("汉唐中医", "岐黄经方"))
     ]
     if residual:
         raise SystemExit(f"Branding residual remains: {', '.join(residual)}")
 
-    print("Qihuang branding verified.")
+    print("Miyuanfang branding verified.")
     if changed:
         print("Updated: " + ", ".join(changed))
 
 
 if __name__ == "__main__":
     main()
+

@@ -43,7 +43,7 @@ done
 # Upstream legitimately uses its original product name. Reapply only the
 # user-facing personal branding after each merge while leaving historical
 # source texts and classic quotations untouched.
-python3 tool/apply_qihuang_branding.py
+python3 tool/apply_miyuanfang_branding.py
 
 # Android requires a larger versionCode for an in-place update. Both values are
 # incremented automatically; no manual version editing is needed.
@@ -76,10 +76,10 @@ rm .github/next-version.txt
 tag="v${version%%+*}"
 mkdir -p release_notes
 cat > "release_notes/$tag.md" <<EOF
-# 岐黄经方 $tag
+# 覓源方 $tag
 
 - 同步上游仓库最新代码与数据。
-- 保留离线设备卡密、岐黄经方名称与图标。
+- 保留离线设备卡密、覓源方名称与图标。
 - 更新检查继续使用 1390613925-boop/nihaixia-app。
 - 使用既有正式证书签名，并启用 R8 混淆与资源收缩。
 EOF
@@ -87,3 +87,5 @@ EOF
 echo "UPSTREAM_CHANGED=true" >> "$GITHUB_OUTPUT"
 echo "VERSION=$version" >> "$GITHUB_OUTPUT"
 echo "TAG=$tag" >> "$GITHUB_OUTPUT"
+
+

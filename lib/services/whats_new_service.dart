@@ -26,8 +26,7 @@ class WhatsNewService {
       // 首次安装（last_seen 为空）或版本更新（last_seen 不同）：
       // 弹出「本次更新了什么」，随后记录为已查看，避免重复弹出。
       if (!context.mounted) return;
-      final entry = ChangelogRepository.getForVersion(current) ??
-          ChangelogRepository.latest;
+      final entry = ChangelogRepository.getForVersion(current);
       _showDialog(context, current, entry);
 
       // 无论用户是否关闭弹窗，都更新为已查看，避免重复弹出
