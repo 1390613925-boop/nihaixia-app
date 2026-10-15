@@ -2,18 +2,18 @@
 
 <img width="120" src="docs/images/logo.jpg" alt="覓源 Logo">
 
-# 覓源 · 倪海厦六经辨证中医诊断助手
+# 覓源 · 中医经典学习与辨证辅助工具
 
-**一款离线优先、完全免费的中医经方学习与辅助诊断 App，忠实还原倪海厦人纪体系**
+**一款离线优先、数据本地的中医经典学习与辨证辅助 App**
 
 离线可用 · 数据全本地 · 无需注册 · 开箱即用
 
-[![Release](https://img.shields.io/github/v/release/jangviktor-web/nihaixia-app?style=for-the-badge&color=green&label=📥%20Download)](https://github.com/jangviktor-web/nihaixia-app/releases/latest)
+[![Release](https://img.shields.io/github/v/release/1390613925-boop/nihaixia-app?style=for-the-badge&color=green&label=📥%20Download)](https://github.com/1390613925-boop/nihaixia-app/releases/latest)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Android](https://img.shields.io/badge/Android-6.0+-3DDC84?style=for-the-badge&logo=android&logoColor=white)]()
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/jangviktor-web/nihaixia-app?style=for-the-badge&color=yellow)](https://github.com/jangviktor-web/nihaixia-app/stargazers)
+[![Stars](https://img.shields.io/github/stars/1390613925-boop/nihaixia-app?style=for-the-badge&color=yellow)](https://github.com/1390613925-boop/nihaixia-app/stargazers)
 
 <br/>
 
