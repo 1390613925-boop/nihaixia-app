@@ -86,7 +86,7 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
                         ),
                         const SizedBox(height: 28),
                         const Text(
-                          '覓源方',
+                          '覓源',
                           style: TextStyle(
                             color: Color(0xFF0E5A56),
                             fontSize: 42,

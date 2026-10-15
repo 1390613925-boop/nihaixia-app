@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reapply the personal Miyuanfang branding after merging upstream."""
+"""Reapply the personal Miyuan branding after merging upstream."""
 
 from pathlib import Path
 
@@ -26,7 +26,7 @@ def main() -> None:
     changed = []
     for path in TARGETS:
         text = path.read_text(encoding="utf-8")
-        branded = text.replace("汉唐中医", "覓源方").replace("岐黄经方", "覓源方")
+        branded = text.replace("汉唐中医", "覓源").replace("岐黄经方", "覓源")
         if branded != text:
             path.write_text(branded, encoding="utf-8")
             changed.append(str(path))
@@ -39,11 +39,10 @@ def main() -> None:
     if residual:
         raise SystemExit(f"Branding residual remains: {', '.join(residual)}")
 
-    print("Miyuanfang branding verified.")
+    print("Miyuan branding verified.")
     if changed:
         print("Updated: " + ", ".join(changed))
 
 
 if __name__ == "__main__":
     main()
-

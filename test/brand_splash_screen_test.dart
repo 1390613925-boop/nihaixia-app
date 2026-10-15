@@ -12,14 +12,14 @@ void main() {
       ),
     );
 
-    expect(find.text('覓源方'), findsOneWidget);
+    expect(find.text('覓源'), findsOneWidget);
     expect(find.text('循经典之源，索辨证之方'), findsOneWidget);
 
     await tester.tapAt(const Offset(20, 20));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
 
-    expect(find.text('覓源方'), findsNothing);
+    expect(find.text('覓源'), findsNothing);
     expect(find.text('HOME_READY'), findsOneWidget);
   });
 
@@ -33,7 +33,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2300));
     await tester.pump(const Duration(milliseconds: 700));
 
-    expect(find.text('覓源方'), findsNothing);
+    expect(find.text('覓源'), findsNothing);
     expect(find.text('HOME_READY'), findsOneWidget);
   });
 }
