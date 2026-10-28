@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../config/app_identity.dart';
 import '../services/license_service.dart';
 
 /// 首次启动授权闸门。本文件为定制分发版新增。
@@ -69,7 +70,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         ),
                         const SizedBox(height: 18),
                         const Text(
-                          '覓源',
+                          AppIdentity.displayName,
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,

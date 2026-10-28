@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import '../config/app_identity.dart';
 import '../engine/diagnostic_engine.dart';
 import '../engine/diagnostic_rules.dart';
 import '../engine/meridian_formula_types.dart';
@@ -927,7 +928,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _shareResult(DiagnosisResult result) {
     final formula = FormulaRepository.getByName(result.formula);
-    String text = '【覓源辨证结果】\n\n';
+    String text = '【${AppIdentity.displayName}辨证结果】\n\n';
     text += '六经：${result.displayMeridian}病\n';
     if (result.isCombined) {
       text += '合病：${result.meridian}与${result.combinedMeridian}同病\n';
@@ -955,7 +956,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
       text += '\n';
     }
-    text += '—— 来自「覓源」App';
+    text += '—— 来自「${AppIdentity.displayName}」App';
     Share.share(text);
   }
 

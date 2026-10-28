@@ -4,6 +4,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
+import '../config/app_identity.dart';
 import '../data/settings_repository.dart';
 import '../data/database_helper.dart';
 import '../data/changelog_repository.dart';
@@ -226,7 +227,7 @@ Future<void> exportBookmarks(BuildContext context) async {
     return;
   }
 
-  String text = '【覓源·收藏导出】\n\n';
+  String text = '【${AppIdentity.displayName}·收藏导出】\n\n';
   for (final b in bookmarks) {
     text += '━━━━━━━━━━━━━━\n';
     text += '${b.title}\n';
@@ -234,7 +235,7 @@ Future<void> exportBookmarks(BuildContext context) async {
     text += '${b.createdAt}\n\n';
     text += '${b.content}\n\n';
   }
-  text += '—— 来自「覓源」App';
+  text += '—— 来自「${AppIdentity.displayName}」App';
 
   await Share.share(text);
 }
@@ -297,7 +298,7 @@ Future<void> showAboutPage(BuildContext context) async {
                   Icon(Icons.local_hospital, size: 64,
                       color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 8),
-                  const Text('覓源', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(AppIdentity.displayName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text('v${info.version}', style: TextStyle(color: context.colors.onSurfaceVariant)),
                 ],
@@ -335,7 +336,7 @@ Future<void> showAboutPage(BuildContext context) async {
             const Divider(),
             const SizedBox(height: 8),
             Center(
-              child: Text('© 2024-2026 覓源',
+              child: Text('© 2024-2026 ${AppIdentity.displayName}',
                   style: TextStyle(color: context.colors.onSurfaceVariant, fontSize: 12)),
             ),
           ],

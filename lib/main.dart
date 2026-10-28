@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'config/app_identity.dart';
 import 'config/distribution_config.dart';
 import 'data/acupuncture_repository.dart';
 import 'data/acupoint_repository.dart';
@@ -28,17 +29,17 @@ void main() async {
   await SettingsRepository.instance.load();
   // 紫微解读层外置规则；加载失败会在仓库内部静默降级为内建默认值，不影响启动。
   await ZiweiRulesRepository.load();
-  runApp(const NiHaishaApp());
+  runApp(const MiyuanApp());
 }
 
-class NiHaishaApp extends StatefulWidget {
-  const NiHaishaApp({super.key});
+class MiyuanApp extends StatefulWidget {
+  const MiyuanApp({super.key});
 
   @override
-  State<NiHaishaApp> createState() => _NiHaishaAppState();
+  State<MiyuanApp> createState() => _MiyuanAppState();
 }
 
-class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
+class _MiyuanAppState extends State<MiyuanApp> with WidgetsBindingObserver {
   late Future<LicenseInfo> _license = LicenseService.current();
   Timer? _licenseTimer;
 
@@ -79,7 +80,7 @@ class _NiHaishaAppState extends State<NiHaishaApp> with WidgetsBindingObserver {
       builder: (context, _) {
         final settings = SettingsRepository.instance;
         return MaterialApp(
-          title: '覓源',
+          title: AppIdentity.displayName,
           debugShowCheckedModeBanner: false,
           themeMode: settings.themeMode,
           theme: ThemeData(

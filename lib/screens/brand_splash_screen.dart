@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../config/app_identity.dart';
+
 /// Three-second, skippable brand introduction shown after the native splash.
 class BrandSplashScreen extends StatefulWidget {
   const BrandSplashScreen({super.key, required this.child});
@@ -86,7 +88,7 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
                         ),
                         const SizedBox(height: 28),
                         const Text(
-                          '覓源',
+                          AppIdentity.displayName,
                           style: TextStyle(
                             color: Color(0xFF0E5A56),
                             fontSize: 42,
@@ -97,7 +99,7 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
                         ),
                         const SizedBox(height: 18),
                         const Text(
-                          '循经典之源，索辨证之方',
+                          AppIdentity.tagline,
                           style: TextStyle(
                             color: Color(0xFF263B59),
                             fontSize: 16,

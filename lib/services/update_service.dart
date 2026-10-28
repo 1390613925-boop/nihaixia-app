@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import '../config/app_identity.dart';
 import '../data/database_helper.dart';
 
 class UpdateInfo {
@@ -28,10 +29,9 @@ class UpdateInfo {
 }
 
 class UpdateService {
-  static const repositoryOwner = '1390613925-boop';
-  static const repositoryName = 'nihaixia-app';
-  static const releasesApiUrl =
-      'https://api.github.com/repos/$repositoryOwner/$repositoryName/releases/latest';
+  static const repositoryOwner = AppIdentity.updateRepositoryOwner;
+  static const repositoryName = AppIdentity.updateRepositoryName;
+  static const releasesApiUrl = AppIdentity.updateReleasesApiUrl;
   static const _ignoredVersionKey = 'ignored_update_version';
   static const _permanentlyIgnoredKey = 'permanently_ignored_versions';
   static const _mirrorEnabledKey = 'update_mirror_enabled';

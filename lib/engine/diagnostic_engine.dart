@@ -1,3 +1,4 @@
+import '../config/app_identity.dart';
 import '../models/diagnosis.dart';
 import '../data/formula_repository.dart';
 import 'diagnostic_rules.dart';
@@ -123,7 +124,7 @@ class DiagnosticEngine {
   // ==================== 问候与选项 ====================
 
   String getInitialGreeting() {
-    return '你好，我是覓源辨证助手。\n\n'
+    return '你好，我是${AppIdentity.assistantName}。\n\n'
         '我将按照倪海厦老师的辨证方法，通过《问诊公式》逐项问诊帮你分析：\n'
         'Q1 寒热感觉（必答）\n'
         'Q2 脉象（不会摸可选「不清楚」）\n'

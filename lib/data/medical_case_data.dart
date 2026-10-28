@@ -14,6 +14,7 @@ library;
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 
+import '../config/app_identity.dart';
 import 'chinese_convert.dart';
 import 'disease_repository.dart';
 import 'formula_repository.dart';
@@ -334,7 +335,7 @@ class MedicalCase {
     section('结果', result);
     section('观点', view);
     buf.writeln('\n─────────────────');
-    buf.write('覓源 · 倪海厦六经辨证（传统文化参考，非医疗建议）');
+    buf.write('${AppIdentity.displayName} · 倪海厦六经辨证（传统文化参考，非医疗建议）');
     return buf.toString();
   }
 }

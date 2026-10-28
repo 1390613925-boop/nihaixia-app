@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:share_plus/share_plus.dart';
 
+import 'package:nihaisha_app/config/app_identity.dart';
 import 'package:nihaisha_app/services/bazi_service.dart';
 import 'package:nihaisha_app/data/settings_repository.dart';
 import 'package:nihaisha_app/data/saved_chart_repository.dart';
@@ -162,7 +163,7 @@ class _BaZiPaipanScreenState extends State<BaZiPaipanScreen> {
           '起运：${f.startAge.toStringAsFixed(1)} 岁（${f.qiYunTime.year} 年交运）');
       b.writeln('大运：${f.decades.map((d) => d.ganZhi).join(' → ')}');
     }
-    b.writeln('—— 来自覓源（民俗文化参考，非医疗建议）');
+    b.writeln('—— 来自${AppIdentity.displayName}（民俗文化参考，非医疗建议）');
     return b.toString();
   }
 

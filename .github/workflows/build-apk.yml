@@ -90,8 +90,7 @@ jobs:
         run: |
           test -f lib/services/license_service.dart
           test -f lib/screens/activation_screen.dart
-          grep -q "1390613925-boop" lib/services/update_service.dart
-          grep -q "覓源" lib/main.dart
+          python3 tool/verify_distribution.py
           grep -q "isMinifyEnabled = true" android/app/build.gradle.kts
           grep -q "isShrinkResources = true" android/app/build.gradle.kts
 
@@ -119,7 +118,7 @@ jobs:
         run: flutter pub get
 
       - name: Test card-key and personal update feed
-        run: flutter test test/license_service_test.dart test/services/update_service_test.dart
+        run: flutter test test/config/app_identity_test.dart test/license_service_test.dart test/services/update_service_test.dart
 
       - name: Build APK (universal)
         run: flutter build apk --release
